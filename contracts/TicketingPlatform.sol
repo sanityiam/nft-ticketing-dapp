@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "./EventTicketNFT.sol";
+
 contract TicketingPlatform {
+    // NFT contract
+    EventTicketNFT public ticketNFT;
+    
+    constructor(address nftAddress) {
+        ticketNFT = EventTicketNFT(nftAddress);
+    }
+
     // Events
     event EventCreated(
         uint256 indexed eventId,
@@ -19,6 +28,7 @@ contract TicketingPlatform {
 
     event TicketsMinted(uint256 indexed eventId, uint256 quantity, uint256 firstTokenId, uint256 lastTokenId);
     event TicketCreated(uint256 indexed tokenId, uint256 indexed eventId);
+    event TicketPurchased(uint256 indexed eventId, uint256 indexed tokenId, address indexed buyer, uint256 price);
 
     // Errors
     error EmptyName();
@@ -30,6 +40,10 @@ contract TicketingPlatform {
     error EventNotFound();
     error NotOrganizer();
     error SupplyExceeded();
+    error InvalidPayment();
+    error SoldOut();
+    error TransferFailed();
+
 
     // Event data structure
     struct EventData {
@@ -75,6 +89,9 @@ contract TicketingPlatform {
 
     // listingId => Listing
     mapping(uint256 => Listing) public listingsById;
+
+    // primary pool
+    mapping(uint256 => uint256[]) private primaryPool;
 
     // next listing id
     uint256 public nextListingId = 1;
@@ -157,6 +174,9 @@ contract TicketingPlatform {
             ticketEventId[tokenId] = eventId;
             ticketUsed[tokenId] = false;
 
+            ticketNFT.mint(address(this), tokenId);
+            primaryPool[eventId].push(tokenId);
+
             emit TicketCreated(tokenId, eventId);
         }
 
@@ -164,6 +184,29 @@ contract TicketingPlatform {
 
         lastTokenId = nextTokenId - 1;
         emit TicketsMinted(eventId, quantity, firstTokenId, lastTokenId);
+    }
+
+    // buy primary ticket
+    function buyPrimary(uint256 eventId) external payable returns (uint256 tokenId) {
+        EventData storage e = eventsById[eventId];
+        if (e.organizer == address(0)) revert EventNotFound();
+
+        if (msg.value != e.basePrice) revert InvalidPayment();
+
+        uint256 poolSize = primaryPool[eventId].length;
+        if (poolSize == 0) revert SoldOut();
+
+        tokenId = primaryPool[eventId][poolSize - 1];
+        primaryPool[eventId].pop();
+
+        // transfer NFT to buyer
+        ticketNFT.transferFrom(address(this), msg.sender, tokenId);
+
+        // pay organizer
+        (bool ok, ) = e.organizer.call{value: msg.value}("");
+        if (!ok) revert TransferFailed();
+
+        emit TicketPurchased(eventId, tokenId, msg.sender, msg.value);
     }
 
     // sanity check function
