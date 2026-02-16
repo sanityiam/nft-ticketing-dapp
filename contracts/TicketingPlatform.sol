@@ -17,6 +17,9 @@ contract TicketingPlatform {
         address venueVerifier
     );
 
+    event TicketsMinted(uint256 indexed eventId, uint256 quantity, uint256 firstTokenId, uint256 lastTokenId);
+    event TicketCreated(uint256 indexed tokenId, uint256 indexed eventId);
+
     // Errors
     error EmptyName();
     error EmptyVenue();
@@ -24,6 +27,9 @@ contract TicketingPlatform {
     error InvalidMaxSupply();
     error InvalidRoyaltyBps();
     error InvalidVenueVerifier();
+    error EventNotFound();
+    error NotOrganizer();
+    error SupplyExceeded();
 
     // Event data structure
     struct EventData {
@@ -72,6 +78,9 @@ contract TicketingPlatform {
 
     // next listing id
     uint256 public nextListingId = 1;
+
+    // next token id
+    uint256 public nextTokenId = 1;
 
     // create event
     function createEvent(
@@ -127,6 +136,34 @@ contract TicketingPlatform {
             royaltyBps,
             venueVerifier
         );
+    }
+
+    // mint tickets
+    function mintTickets(uint256 eventId, uint256 quantity) external returns (uint256 firstTokenId, uint256 lastTokenId) {
+        if (quantity == 0) revert InvalidMaxSupply(); // reuse existing error (simple) or change later
+
+        EventData storage e = eventsById[eventId];
+        if (e.organizer == address(0)) revert EventNotFound();
+        if (e.organizer != msg.sender) revert NotOrganizer();
+
+        if (e.mintedCount + quantity > e.maxSupply) revert SupplyExceeded();
+
+        firstTokenId = nextTokenId;
+
+        for (uint256 i = 0; i < quantity; i++) {
+            uint256 tokenId = nextTokenId;
+            nextTokenId += 1;
+
+            ticketEventId[tokenId] = eventId;
+            ticketUsed[tokenId] = false;
+
+            emit TicketCreated(tokenId, eventId);
+        }
+
+        e.mintedCount += quantity;
+
+        lastTokenId = nextTokenId - 1;
+        emit TicketsMinted(eventId, quantity, firstTokenId, lastTokenId);
     }
 
     // sanity check function
