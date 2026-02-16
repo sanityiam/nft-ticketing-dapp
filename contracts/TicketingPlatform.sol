@@ -29,6 +29,8 @@ contract TicketingPlatform {
     event TicketsMinted(uint256 indexed eventId, uint256 quantity, uint256 firstTokenId, uint256 lastTokenId);
     event TicketCreated(uint256 indexed tokenId, uint256 indexed eventId);
     event TicketPurchased(uint256 indexed eventId, uint256 indexed tokenId, address indexed buyer, uint256 price);
+    event TicketCheckedIn(uint256 indexed eventId, uint256 indexed tokenId, address indexed verifier, address attendee);
+
 
     // Errors
     error EmptyName();
@@ -43,6 +45,10 @@ contract TicketingPlatform {
     error InvalidPayment();
     error SoldOut();
     error TransferFailed();
+    error NotVenueVerifier();
+    error TicketAlreadyUsed();
+    error NotTicketOwner();
+
 
 
     // Event data structure
@@ -207,6 +213,24 @@ contract TicketingPlatform {
         if (!ok) revert TransferFailed();
 
         emit TicketPurchased(eventId, tokenId, msg.sender, msg.value);
+    }
+
+    // check-in ticket
+    function checkIn(uint256 tokenId, address attendee) external {
+        uint256 eventId = ticketEventId[tokenId];
+        if (eventId == 0) revert EventNotFound();
+
+        EventData storage e = eventsById[eventId];
+        if (msg.sender != e.venueVerifier) revert NotVenueVerifier();
+
+        if (ticketUsed[tokenId]) revert TicketAlreadyUsed();
+
+        // user must own the NFT
+        if (ticketNFT.ownerOf(tokenId) != attendee) revert NotTicketOwner();
+
+        ticketUsed[tokenId] = true;
+
+        emit TicketCheckedIn(eventId, tokenId, msg.sender, attendee);
     }
 
     // sanity check function
