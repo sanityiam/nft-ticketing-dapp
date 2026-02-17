@@ -25,7 +25,7 @@ describe("Counter", function () {
       "latest",
     );
 
-    // check that the aggregated events match the current value
+    // check that events match the current value
     let total = 0n;
     for (const event of events) {
       total += event.args.by;

@@ -1,0 +1,23 @@
+{
+  "name": "Dubai Concert Ticket #2",
+  "description": "NFT ticket for Dubai Concert at Coca-Cola Arena. Ownership is verified on-chain. Resale rules and used status are enforced by the TicketingPlatform smart contract.",
+  "image": "__BASE__/metadata/2.svg",
+  "attributes": [
+    {
+      "trait_type": "EventId",
+      "value": "1"
+    },
+    {
+      "trait_type": "Event",
+      "value": "Dubai Concert"
+    },
+    {
+      "trait_type": "Venue",
+      "value": "Coca-Cola Arena"
+    },
+    {
+      "trait_type": "Owner",
+      "value": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853"
+    }
+  ]
+}

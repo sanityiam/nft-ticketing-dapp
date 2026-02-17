@@ -22,13 +22,13 @@ async function main() {
   console.log("NFT:", NFT_ADDRESS);
   console.log("Platform:", PLATFORM_ADDRESS);
 
-  // Find newest unused ticket
-  const nextTokenId = await platform.nextTokenId(); // public in your contract
+  // find newest unused ticket
+  const nextTokenId = await platform.nextTokenId(); // public in contract
   if (nextTokenId <= 1n) {
     throw new Error("No minted tokens exist yet. Run smoke.ts first.");
   }
 
-  const LOOKBACK = 50n; // scan last 50 tokenIds
+  const LOOKBACK = 50n; // scan last 50 token ids
   const start = nextTokenId > LOOKBACK ? nextTokenId - LOOKBACK : 1n;
 
   let tokenId: bigint | null = null;
@@ -69,7 +69,7 @@ async function main() {
   const tx = await platformAsVerifier.checkIn(tokenId, attendee);
   await tx.wait();
 
-  console.log("✅ Checked in tokenId:", tokenId.toString());
+  console.log("Checked in tokenId:", tokenId.toString());
   console.log("ticketUsed(tokenId):", await platform.ticketUsed(tokenId));
 }
 

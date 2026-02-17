@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="500" viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="500" rx="28" fill="#0B0F17"/>
+  <rect x="40" y="40" width="820" height="420" rx="22" fill="#131A2A"/>
+  <text x="70" y="120" font-size="46" fill="#FFFFFF" font-family="Arial, sans-serif" font-weight="700">Dubai Concert</text>
+  <text x="70" y="175" font-size="26" fill="#A7B2C6" font-family="Arial, sans-serif">Coca-Cola Arena</text>
+
+  <text x="70" y="270" font-size="22" fill="#A7B2C6" font-family="Arial, sans-serif">Ticket ID</text>
+  <text x="70" y="315" font-size="44" fill="#FFFFFF" font-family="Arial, sans-serif" font-weight="700">#4</text>
+
+  <text x="70" y="410" font-size="18" fill="#6E7A91" font-family="Arial, sans-serif">Verified on-chain • Resale rules enforced by smart contract</text>
+</svg>

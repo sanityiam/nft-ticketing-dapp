@@ -3,16 +3,17 @@ pragma solidity ^0.8.20;
 
 import "./EventTicketNFT.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
-contract TicketingPlatform is ReentrancyGuard {
-    // NFT contract
+contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
+    // nft contract
     EventTicketNFT public ticketNFT;
 
     constructor(address nftAddress) {
         ticketNFT = EventTicketNFT(nftAddress);
     }
 
-    // Events
+    // events
     event EventCreated(
         uint256 indexed eventId,
         address indexed organizer,
@@ -36,7 +37,7 @@ contract TicketingPlatform is ReentrancyGuard {
     event ResalePurchased(uint256 indexed listingId, uint256 indexed tokenId, address indexed seller, address buyer, uint256 price, uint256 royaltyPaid);
     event ListingCancelled(uint256 indexed listingId, uint256 indexed tokenId, address indexed seller);
 
-    // Errors
+    // errors
     error EmptyName();
     error EmptyVenue();
     error InvalidDateTime();
@@ -59,7 +60,7 @@ contract TicketingPlatform is ReentrancyGuard {
     error ListingNotFound();
     error ListingInactive();
 
-    // Event data structure (full info for UI)
+    // event data structure
     struct EventData {
         uint256 eventId;
         address organizer;
@@ -258,7 +259,7 @@ contract TicketingPlatform is ReentrancyGuard {
         tokenId = primaryPool[eventId][poolSize - 1];
         primaryPool[eventId].pop();
 
-        // transfer NFT to buyer
+        // transfer nft to buyer
         ticketNFT.safeTransferFrom(address(this), msg.sender, tokenId);
 
         // pay organizer
@@ -268,7 +269,7 @@ contract TicketingPlatform is ReentrancyGuard {
         emit TicketPurchased(eventId, tokenId, msg.sender, msg.value);
     }
 
-    // list ticket for resale
+    // resale listing
     function listForResale(uint256 tokenId, uint256 price) external returns (uint256 listingId) {
         uint256 eventId = ticketEventId[tokenId];
         if (eventId == 0) revert EventNotFound();
@@ -283,7 +284,7 @@ contract TicketingPlatform is ReentrancyGuard {
         // must own ticket
         if (ticketNFT.ownerOf(tokenId) != msg.sender) revert NotTicketOwner();
 
-        // must approve platform to transfer NFT
+        // must approve platform to transfer nft
         if (ticketNFT.getApproved(tokenId) != address(this) && !ticketNFT.isApprovedForAll(msg.sender, address(this))) {
             revert NotApproved();
         }
@@ -321,14 +322,14 @@ contract TicketingPlatform is ReentrancyGuard {
 
         if (msg.value != l.price) revert InvalidPayment();
 
-        // deactivate listing first (effects before interactions)
+        // deactivate listing first
         l.active = false;
 
         // calculate royalty
         uint256 royalty = (msg.value * uint256(r.royaltyBps)) / 10_000;
         uint256 sellerAmount = msg.value - royalty;
 
-        // transfer NFT from seller to buyer
+        // transfer nft from seller to buyer
         ticketNFT.safeTransferFrom(l.seller, msg.sender, tokenId);
 
         // pay seller
@@ -353,7 +354,7 @@ contract TicketingPlatform is ReentrancyGuard {
         return true;
     }
 
-    // check-in ticket
+    // check in ticket
     function checkIn(uint256 tokenId, address attendee) external {
         uint256 eventId = ticketEventId[tokenId];
         if (eventId == 0) revert EventNotFound();

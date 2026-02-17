@@ -7,17 +7,17 @@ describe("TicketingPlatform (MVP)", function () {
 
     const [deployer, organizer, buyer1, buyer2, verifier] = await ethers.getSigners();
 
-    // deploy NFT
+    // deploy nft
     const NFT = await ethers.getContractFactory("EventTicketNFT", deployer);
     const nft = await NFT.deploy();
     await nft.waitForDeployment();
 
-    // deploy Platform
+    // deploy platform
     const Platform = await ethers.getContractFactory("TicketingPlatform", deployer);
     const platform = await Platform.deploy(await nft.getAddress());
     await platform.waitForDeployment();
 
-    // set minter (platform)
+    // set minter
     await (await nft.connect(deployer).setMinter(await platform.getAddress())).wait();
 
     return { ethers, deployer, organizer, buyer1, buyer2, verifier, nft, platform };
@@ -25,11 +25,11 @@ describe("TicketingPlatform (MVP)", function () {
 
   async function createEventFixture(overrides?: Partial<{
     resaleEnabled: boolean;
-    maxResalePrice: bigint;      // if you want explicit cap
+    maxResalePrice: bigint;
     royaltyBps: number;
     maxSupply: number;
-    basePriceEther: string;      // "0.01"
-    venueVerifier: string;       // address
+    basePriceEther: string;
+    venueVerifier: string;
   }>) {
     const ctx = await deployFixture();
     const { ethers, platform, organizer, verifier } = ctx;
@@ -56,11 +56,11 @@ describe("TicketingPlatform (MVP)", function () {
       venueVerifier
     )).wait();
 
-    const eventId = 1n; // fresh fixture => first event is always 1
+    const eventId = 1n;
     return { ...ctx, eventId, basePrice, maxSupply, resaleEnabled, maxResalePrice, royaltyBps, venueVerifier };
   }
 
-  it("1) createEvent rejects empty name/venue", async function () {
+  it("createEvent rejects empty name/venue", async function () {
     const { ethers, platform, organizer, verifier } = await deployFixture();
 
     const now = Math.floor(Date.now() / 1000);
@@ -96,7 +96,7 @@ await expect(
 ).to.be.revertedWithCustomError(platform, "EmptyVenue");
   });
 
-  it("2) mintTickets cannot exceed maxSupply", async function () {
+  it("mintTickets cannot exceed maxSupply", async function () {
     const { platform, organizer, eventId } = await createEventFixture({ maxSupply: 2 });
 
     await (await platform.connect(organizer).mintTickets(eventId, 2)).wait();
@@ -105,7 +105,7 @@ await expect(
 
   });
 
-  it("3) buyPrimary transfers NFT to buyer and funds to organizer", async function () {
+  it("buyPrimary transfers NFT to buyer and funds to organizer", async function () {
     const { ethers, platform, nft, organizer, buyer1, eventId, basePrice } =
       await createEventFixture({ maxSupply: 1 });
 
@@ -122,7 +122,7 @@ await expect(
     expect(orgBalAfter - orgBalBefore).to.equal(basePrice);
   });
 
-  it("4) listForResale requires owner + approval", async function () {
+  it("listForResale requires owner + approval", async function () {
     const { ethers, platform, nft, organizer, buyer1, eventId, basePrice } =
       await createEventFixture({ maxSupply: 1 });
 
@@ -132,10 +132,10 @@ await expect(
     const tokenId = 1n;
     const resalePrice = basePrice + ethers.parseEther("0.001");
 
-    // not approved yet -> should revert
+    // not approved yet = should revert
     await expect(platform.connect(buyer1).listForResale(tokenId, resalePrice)).to.be.revertedWithCustomError(platform, "NotApproved");
 
-    // approve -> should work
+    // approve = should work
     await (await nft.connect(buyer1).approve(await platform.getAddress(), tokenId)).wait();
 
     await (await platform.connect(buyer1).listForResale(tokenId, resalePrice)).wait();
@@ -146,13 +146,12 @@ await expect(
     expect(listing.tokenId).to.equal(tokenId);
   });
 
-  it("5) listForResale respects maxResalePrice cap", async function () {
-    // cap is exactly basePrice (computed inside fixture)
+  it("listForResale respects maxResalePrice cap", async function () {
+    // cap is exactly basePrice
     const { platform, nft, organizer, buyer1, eventId, basePrice } =
       await createEventFixture({
         maxSupply: 1,
         basePriceEther: "0.01",
-        // maxResalePrice will be set below AFTER we know basePrice
       });
 
     // setResaleRules to enforce cap = basePrice
@@ -164,14 +163,14 @@ await expect(
     const tokenId = 1n;
     await (await nft.connect(buyer1).approve(await platform.getAddress(), tokenId)).wait();
 
-    // price > cap -> revert
+    // price > cap = revert
     await expect(platform.connect(buyer1).listForResale(tokenId, basePrice + 1n)).to.be.revertedWithCustomError(platform, "PriceTooHigh");
 
-    // price == cap -> ok
+    // price == cap = ok
     await (await platform.connect(buyer1).listForResale(tokenId, basePrice)).wait();
   });
 
-  it("6) buyResale transfers NFT, pays royalty split, listing becomes inactive", async function () {
+  it("buyResale transfers NFT, pays royalty split, listing becomes inactive", async function () {
     const { ethers, platform, nft, organizer, buyer1, buyer2, eventId, basePrice } =
       await createEventFixture({
         maxSupply: 1,
@@ -207,7 +206,7 @@ await expect(
     expect(orgBalAfter - orgBalBefore).to.equal(royalty);
   });
 
-  it("7) checkIn only verifier, cannot check-in twice, cannot resell after used", async function () {
+  it("checkIn only verifier, cannot check-in twice, cannot resell after used", async function () {
     const { platform, nft, organizer, buyer1, verifier, eventId, basePrice } =
       await createEventFixture({
         maxSupply: 1,
@@ -229,7 +228,7 @@ await expect(
     await (await platform.connect(verifier).checkIn(tokenId, buyer1.address)).wait();
     expect(await platform.ticketUsed(tokenId)).to.equal(true);
 
-    // cannot check-in twice
+    // cannot check in twice
     await expect(platform.connect(verifier).checkIn(tokenId, buyer1.address)).to.be.revertedWithCustomError(platform, "TicketAlreadyUsed");
 
 

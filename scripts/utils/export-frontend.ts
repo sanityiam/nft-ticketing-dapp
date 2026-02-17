@@ -31,7 +31,7 @@ export function exportToFrontend(deployment: DeploymentJson) {
 
   ensureDir(frontendAbiDir);
 
-  // Write addresses.json
+  // write addresses.json
   const addressesPath = path.join(frontendContractsDir, "addresses.json");
 
   fs.writeFileSync(
@@ -40,7 +40,7 @@ export function exportToFrontend(deployment: DeploymentJson) {
     "utf8"
   );
 
-  // Copy ABIs
+  // copy abis
   const contractsToCopy = ["EventTicketNFT", "TicketingPlatform"] as const;
 
   for (const name of contractsToCopy) {
@@ -74,7 +74,7 @@ export function exportToFrontend(deployment: DeploymentJson) {
     );
   }
 
-  console.log("\n✅ Frontend artifacts exported:");
+  console.log("\nFrontend artifacts exported:");
   console.log("   frontend/src/contracts/addresses.json");
   console.log("   frontend/src/contracts/abi/*.abi.json");
 }

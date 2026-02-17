@@ -13,10 +13,8 @@ export type Deployments = {
 };
 
 function detectNetworkName(): string {
-  // 1) If Hardhat set it, use it.
   if (process.env.HARDHAT_NETWORK) return process.env.HARDHAT_NETWORK;
 
-  // 2) Otherwise, parse CLI args: --network localhost  OR  --network=localhost
   const argv = process.argv;
   const i = argv.findIndex((a) => a === "--network");
   if (i !== -1 && argv[i + 1]) return argv[i + 1];
@@ -24,7 +22,7 @@ function detectNetworkName(): string {
   const eq = argv.find((a) => a.startsWith("--network="));
   if (eq) return eq.split("=")[1] ?? "hardhat";
 
-  // 3) Default
+  // default
   return "hardhat";
 }
 
@@ -42,8 +40,7 @@ export function loadDeployments(): Deployments {
 
   const d = JSON.parse(fs.readFileSync(file, "utf8")) as Deployments;
 
-  // Helpful debug:
-  // eslint-disable-next-line no-console
+  // debug
   console.log(`Loaded deployments from: deployments/${networkName}.json`);
 
   return d;

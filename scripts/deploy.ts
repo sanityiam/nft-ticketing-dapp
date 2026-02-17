@@ -1,44 +1,63 @@
 import { network } from "hardhat";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import { exportToFrontend } from "./utils/export-frontend.js";
+
+type DeploymentJson = {
+  chainId: number;
+  network: string;
+  deployedAt: string;
+  deployer: string;
+  contracts: Record<string, string>;
+};
 
 async function main() {
   const hre = await network.connect();
   const { ethers } = hre;
 
-  const networkName = (hre as any).networkName ?? process.env.HARDHAT_NETWORK ?? "hardhat";
+  const networkName =
+  process.env.DEPLOYMENT_NAME ??
+  process.env.HARDHAT_NETWORK ??
+  "hardhat";
 
   const [deployer] = await ethers.getSigners();
-
   console.log("Deployer:", deployer.address);
 
-  // Deploy NFT
+  // deploy nft
   const NFT = await ethers.getContractFactory("EventTicketNFT", deployer);
   const nft = await NFT.deploy();
   await nft.waitForDeployment();
   const nftAddress = await nft.getAddress();
   console.log("EventTicketNFT deployed:", nftAddress);
 
-  // Deploy Platform
+  // deploy platform
   const Platform = await ethers.getContractFactory("TicketingPlatform", deployer);
   const platform = await Platform.deploy(nftAddress);
   await platform.waitForDeployment();
   const platformAddress = await platform.getAddress();
   console.log("TicketingPlatform deployed:", platformAddress);
 
-  // Set minter
+  // set minter
   await (await nft.setMinter(platformAddress)).wait();
   console.log("Minter set:", platformAddress);
 
-  // Save deployment JSON
+  const baseURI = process.env.BASE_URI ?? "";
+  if (baseURI) {
+    await (await nft.setBaseURI(baseURI)).wait();
+    console.log("BaseURI set:", baseURI);
+  } else {
+    console.log("BaseURI not set (BASE_URI env var is empty).");
+  }
+
+  // save deployment json
   const outDir = path.join(process.cwd(), "deployments");
-  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  fs.mkdirSync(outDir, { recursive: true });
 
   const outPath = path.join(outDir, `${networkName}.json`);
 
   const chainId = Number((await ethers.provider.getNetwork()).chainId);
-  const payload = {
+
+  const payload: DeploymentJson = {
     chainId,
     network: networkName,
     deployedAt: new Date().toISOString(),
@@ -49,10 +68,10 @@ async function main() {
     },
   };
 
-  fs.writeFileSync(outPath, JSON.stringify(payload, null, 2));
+  fs.writeFileSync(outPath, JSON.stringify(payload, null, 2), "utf8");
   console.log("Saved deployment:", outPath);
 
-  // Export to frontend
+  // export to frontend
   try {
     exportToFrontend(payload);
   } catch (e: any) {

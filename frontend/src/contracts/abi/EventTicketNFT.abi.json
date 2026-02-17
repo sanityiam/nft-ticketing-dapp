@@ -603,6 +603,19 @@
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "newBase",
+        "type": "string"
+      }
+    ],
+    "name": "setBaseURI",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "minter",
         "type": "address"
