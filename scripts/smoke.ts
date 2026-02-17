@@ -1,172 +1,101 @@
 import { network } from "hardhat";
-
-const NFT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-const PLATFORM_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+import { loadDeployments } from "./_deployments.js";
 
 async function main() {
   const { ethers } = await network.connect();
+  const d = loadDeployments();
+
+  const NFT_ADDRESS = d.contracts.EventTicketNFT;
+  const PLATFORM_ADDRESS = d.contracts.TicketingPlatform;
+
+  console.log("Smoke test started");
+  console.log("NFT:", NFT_ADDRESS);
+  console.log("Platform:", PLATFORM_ADDRESS);
+
+  const DO_CHECKIN = process.env.DO_CHECKIN === "1";
 
   const [organizer, buyer1, buyer2] = await ethers.getSigners();
 
-  const platformAsOrg = await ethers.getContractAt("TicketingPlatform", PLATFORM_ADDRESS, organizer);
-  const platformAsBuyer1 = await ethers.getContractAt("TicketingPlatform", PLATFORM_ADDRESS, buyer1);
-  const platformAsBuyer2 = await ethers.getContractAt("TicketingPlatform", PLATFORM_ADDRESS, buyer2);
+  const platformOrg = await ethers.getContractAt("TicketingPlatform", PLATFORM_ADDRESS, organizer);
+  const platformBuyer1 = await ethers.getContractAt("TicketingPlatform", PLATFORM_ADDRESS, buyer1);
+  const platformBuyer2 = await ethers.getContractAt("TicketingPlatform", PLATFORM_ADDRESS, buyer2);
   const nft = await ethers.getContractAt("EventTicketNFT", NFT_ADDRESS);
 
-  // create event
   const basePrice = ethers.parseEther("0.01");
   const now = Math.floor(Date.now() / 1000);
   const dateTime = BigInt(now + 7 * 24 * 60 * 60);
+  const resalePrice = ethers.parseEther("0.015");
 
-  const startBlock1 = await ethers.provider.getBlockNumber();
-  const createTx = await platformAsOrg.createEvent(
+  // create event (get eventId deterministically)
+  const eventId = await platformOrg.createEvent.staticCall(
     "Dubai Concert",
     "Coca-Cola Arena",
     dateTime,
     basePrice,
-    10,             // maxSupply
-    true,           // resaleEnabled
-    basePrice * 2n, // maxResalePrice
-    500,            // royaltyBps = 5%
+    10,
+    true,
+    basePrice * 2n,
+    500,
     organizer.address
   );
-  const createRcpt = await createTx.wait();
-  const endBlock1 = createRcpt!.blockNumber;
+  await (await platformOrg.createEvent(
+    "Dubai Concert",
+    "Coca-Cola Arena",
+    dateTime,
+    basePrice,
+    10,
+    true,
+    basePrice * 2n,
+    500,
+    organizer.address
+  )).wait();
 
-  const createdEvents = await platformAsOrg.queryFilter(
-    platformAsOrg.filters.EventCreated(),
-    startBlock1,
-    endBlock1
-  );
-  const eventId = createdEvents[0].args.eventId as bigint;
-  console.log("Event created, eventId:", eventId.toString());
+  console.log("Event created:", eventId.toString());
 
-  // mint tickets
-  const mintTx = await platformAsOrg.mintTickets(eventId, 5);
-  await mintTx.wait();
-  console.log("Tickets minted.");
+  // mint
+  await (await platformOrg.mintTickets(eventId, 5)).wait();
+  console.log("Tickets minted");
 
-  // buyer1 buys primary
-  const startBlock2 = await ethers.provider.getBlockNumber();
-  const buyPrimaryTx = await platformAsBuyer1.buyPrimary(eventId, { value: basePrice });
-  const buyPrimaryRcpt = await buyPrimaryTx.wait();
-  const endBlock2 = buyPrimaryRcpt!.blockNumber;
+  // primary purchase (get tokenId deterministically)
+  const tokenId = await platformBuyer1.buyPrimary.staticCall(eventId, { value: basePrice });
+  await (await platformBuyer1.buyPrimary(eventId, { value: basePrice })).wait();
 
-  const purchasedPrimaryEvents = await platformAsBuyer1.queryFilter(
-    platformAsBuyer1.filters.TicketPurchased(),
-    startBlock2,
-    endBlock2
-  );
+  console.log("Primary purchase:", tokenId.toString(), "buyer:", buyer1.address);
+  console.log("Owner after primary:", await nft.ownerOf(tokenId));
 
-  const tokenId = purchasedPrimaryEvents[purchasedPrimaryEvents.length - 1].args.tokenId as bigint;
-  console.log("Primary purchased. tokenId:", tokenId.toString(), "buyer1:", buyer1.address);
+  // approve
+  await (await nft.connect(buyer1).setApprovalForAll(PLATFORM_ADDRESS, true)).wait();
+  console.log("ApprovalForAll enabled (buyer1 -> platform)");
 
-  const owner1 = await nft.ownerOf(tokenId);
-  console.log("ownerOf(tokenId) after primary:", owner1);
+  // list for resale (get listingId deterministically)
+  const listingId = await platformBuyer1.listForResale.staticCall(tokenId, resalePrice);
+  await (await platformBuyer1.listForResale(tokenId, resalePrice)).wait();
 
-  // buyer1 approves platform
-const approveTx = await nft.connect(buyer1).setApprovalForAll(PLATFORM_ADDRESS, true);
-await approveTx.wait();
-console.log("ApprovedForAll set for buyer1 -> platform");
-  console.log("Approved platform for tokenId:", tokenId.toString());
+  console.log("Listed for resale: listingId =", listingId.toString());
 
-  // buyer1 lists for resale
-  const resalePrice = ethers.parseEther("0.015");
-  // debug
-  const ev = await platformAsBuyer1.eventsById(eventId);
-  console.log("event.resaleEnabled:", ev.resaleEnabled);
-  console.log("event.maxResalePrice:", ev.maxResalePrice.toString());
-  console.log("event.royaltyBps:", ev.royaltyBps);
+  // buy resale
+  await (await platformBuyer2.buyResale(listingId, { value: resalePrice })).wait();
 
-  const usedBefore = await platformAsBuyer1.ticketUsed(tokenId);
-  console.log("ticketUsed before list:", usedBefore);
+  console.log("Resale purchased by:", buyer2.address);
+  console.log("Owner after resale:", await nft.ownerOf(tokenId));
 
-  const ownerBeforeList = await nft.ownerOf(tokenId);
-  console.log("ownerOf before list:", ownerBeforeList);
-
-  const approvedAddr = await nft.getApproved(tokenId);
-  console.log("getApproved(tokenId):", approvedAddr);
-
-  const approvedForAll = await nft.isApprovedForAll(buyer1.address, PLATFORM_ADDRESS);
-  console.log("isApprovedForAll(buyer1, platform):", approvedForAll);
-
-  // show actual revert reason (raw eth_call + decode)
-  const data = platformAsBuyer1.interface.encodeFunctionData("listForResale", [tokenId, resalePrice]);
-
-  try {
-    await ethers.provider.call({
-      to: PLATFORM_ADDRESS,
-      from: buyer1.address,
-      data,
-    });
-    console.log("raw call listForResale: OK");
-  } catch (err: any) {
-    console.log("raw call listForResale FAILED (decoding):");
-
-    const revertData =
-      err?.data ??
-      err?.error?.data ??
-      err?.info?.error?.data ??
-      err?.cause?.data;
-
-    console.log("revertData:", revertData);
-
-    if (revertData) {
-      try {
-        const decoded = platformAsBuyer1.interface.parseError(revertData);
-        console.log("decoded error:", decoded?.name, decoded?.args ?? "");
-      } catch (e) {
-        console.log("could not decode revertData with ABI");
-      }
-    } else {
-      console.log(err?.shortMessage ?? err?.message ?? err);
-    }
-  }
-
-let listRcpt;
-try {
-const listTx = await platformAsBuyer1.listForResale(tokenId, resalePrice, {
-  gasLimit: 1_500_000n,
-});
-  listRcpt = await listTx.wait();
-  console.log("Listed successfully.");
-} catch (err: any) {
-  console.log("listForResale TX FAILED:");
-  console.log(err?.shortMessage ?? err?.message ?? err);
-  return;
+  // check-in
+if (DO_CHECKIN) {
+  await (await platformOrg.checkIn(tokenId, buyer2.address)).wait();
+  console.log("Checked in. ticketUsed =", await platformOrg.ticketUsed(tokenId));
+} else {
+  console.log("Skipped check-in (set DO_CHECKIN=1 to enable).");
 }
 
-  const currentBlock = listRcpt!.blockNumber;
-  const listedEvents = await platformAsBuyer1.queryFilter(
-    platformAsBuyer1.filters.ListedForResale(),
-    currentBlock,
-    currentBlock
-  );
-
-  const listingId = listedEvents[listedEvents.length - 1].args.listingId as bigint;
-  console.log("Listed for resale. listingId:", listingId.toString(), "price:", resalePrice.toString());
-
-  // buyer2 buys resale
-const buyResaleTx = await platformAsBuyer2.buyResale(listingId, {
-  value: resalePrice,
-  gasLimit: 2_000_000n,
-});
-  await buyResaleTx.wait();
-  console.log("Resale purchased. buyer2:", buyer2.address);
-
-  const owner2 = await nft.ownerOf(tokenId);
-  console.log("ownerOf(tokenId) after resale:", owner2);
-
-  // venue check-in (organizer is verifier)
-  const checkInTx = await platformAsOrg.checkIn(tokenId, buyer2.address);
-  await checkInTx.wait();
-  console.log("Checked in tokenId:", tokenId.toString());
-
-  const used = await platformAsOrg.ticketUsed(tokenId);
-  console.log("ticketUsed(tokenId):", used);
+console.log("\nFULL FLOW PASSED");
+console.log(DO_CHECKIN
+  ? "create -> mint -> primary -> resale -> check-in"
+  : "create -> mint -> primary -> resale (check-in skipped)"
+);
 }
 
 main().catch((e) => {
+  console.error("Smoke test failed:");
   console.error(e);
   process.exitCode = 1;
 });

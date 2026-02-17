@@ -1,4 +1,18 @@
 {
+  "name": "nft-ticketing-dapp",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "smoke": "hardhat run scripts/smoke.ts --network localhost",
+    "smoke:nocheck": "DO_CHECKIN=0 hardhat run scripts/smoke.ts --network localhost",
+    "checkin": "hardhat run scripts/checkin-smoke.ts --network localhost",
+    "demo": "npm run deploy:local && npm run smoke:nocheck && npm run checkin",
+    "demo:reset": "hardhat clean && npm run demo",
+    "test": "hardhat test"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^4.0.4",
     "@nomicfoundation/hardhat-ignition": "^3.0.7",
@@ -14,7 +28,6 @@
     "mocha": "^11.7.5",
     "typescript": "~5.8.0"
   },
-  "type": "module",
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0"
   }

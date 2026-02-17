@@ -1,74 +1,76 @@
 import { network } from "hardhat";
-
-const NFT_ADDRESS = "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707";
-const PLATFORM_ADDRESS = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
+import { loadDeployments } from "./_deployments.js";
 
 async function main() {
   const { ethers } = await network.connect();
+  const d = loadDeployments();
 
-  const [organizer, buyer] = await ethers.getSigners();
+  const NFT_ADDRESS = d.contracts.EventTicketNFT;
+  const PLATFORM_ADDRESS = d.contracts.TicketingPlatform;
+
+  const [verifierSigner] = await ethers.getSigners();
 
   const platform = await ethers.getContractAt("TicketingPlatform", PLATFORM_ADDRESS);
-  const platformAsVerifier = await ethers.getContractAt("TicketingPlatform", PLATFORM_ADDRESS, organizer);
+  const platformAsVerifier = await ethers.getContractAt(
+    "TicketingPlatform",
+    PLATFORM_ADDRESS,
+    verifierSigner
+  );
   const nft = await ethers.getContractAt("EventTicketNFT", NFT_ADDRESS);
 
-  // find latest purchased ticket
-  const currentBlock = await ethers.provider.getBlockNumber();
-  const purchasedEvents = await platform.queryFilter(platform.filters.TicketPurchased(), 0, currentBlock);
+  console.log("Check-in smoke started");
+  console.log("NFT:", NFT_ADDRESS);
+  console.log("Platform:", PLATFORM_ADDRESS);
 
-  if (purchasedEvents.length === 0) {
-    throw new Error("No purchased tickets found. Run smoke.ts first.");
+  // Find newest unused ticket
+  const nextTokenId = await platform.nextTokenId(); // public in your contract
+  if (nextTokenId <= 1n) {
+    throw new Error("No minted tokens exist yet. Run smoke.ts first.");
   }
+
+  const LOOKBACK = 50n; // scan last 50 tokenIds
+  const start = nextTokenId > LOOKBACK ? nextTokenId - LOOKBACK : 1n;
 
   let tokenId: bigint | null = null;
   let attendee: string | null = null;
 
-  // find most recent purchased ticket that is not used yet
-  for (let i = purchasedEvents.length - 1; i >= 0; i--) {
-    const t = purchasedEvents[i].args.tokenId as bigint;
-    const isUsed = await platform.ticketUsed(t);
-    if (!isUsed) {
-      tokenId = t;
-      attendee = purchasedEvents[i].args.buyer as string;
-      break;
-    }
+  for (let t = nextTokenId - 1n; t >= start; t--) {
+    const eventId = await platform.ticketEventId(t);
+    if (eventId === 0n) continue; // token never existed
+
+    const used = await platform.ticketUsed(t);
+    if (used) continue;
+
+    tokenId = t;
+    attendee = await nft.ownerOf(t);
+    break;
   }
 
-  if (tokenId === null || attendee === null) {
-    throw new Error("No unused purchased tickets found. Run smoke.ts again to buy a new ticket.");
+  if (!tokenId || !attendee) {
+    throw new Error("No unused tickets found. Run smoke.ts again (without check-in) to mint/buy a fresh ticket.");
   }
 
+  console.log("Selected tokenId:", tokenId.toString());
+  console.log("Attendee (ownerOf):", attendee);
 
-
-  console.log("Latest purchased tokenId:", tokenId.toString());
-  console.log("Attendee:", attendee);
-
-  // debug why checkIn might revert
+  // debug
   const eventId = await platform.ticketEventId(tokenId);
-  console.log("ticketEventId:", eventId.toString());
+  const eventData = await platform.eventsById(eventId);
 
-  const e = await platform.eventsById(eventId);
-  console.log("event.venueVerifier:", e.venueVerifier);
-  console.log("verifier signer:", organizer.address);
+  console.log("EventId:", eventId.toString());
+  console.log("event.venueVerifier:", eventData.venueVerifier);
+  console.log("verifier signer:", verifierSigner.address);
 
-  const used = await platform.ticketUsed(tokenId);
-  console.log("ticketUsed:", used);
-
-  const owner = await nft.ownerOf(tokenId);
-  console.log("ownerOf(tokenId):", owner);
-
-  // attempt check-in
-  try {
-    const tx = await platformAsVerifier.checkIn(tokenId, attendee);
-    await tx.wait();
-    console.log("✅ Checked in tokenId:", tokenId.toString());
-
-    const usedAfter = await platform.ticketUsed(tokenId);
-    console.log("ticketUsed(tokenId):", usedAfter);
-  } catch (err: any) {
-    console.log("❌ Check-in failed:");
-    console.log(err?.shortMessage ?? err?.message ?? err);
+  if (eventData.venueVerifier.toLowerCase() !== verifierSigner.address.toLowerCase()) {
+    throw new Error("Connected signer is NOT the venue verifier for this event. Switch signer / redeploy.");
   }
+
+  // check-in
+  const tx = await platformAsVerifier.checkIn(tokenId, attendee);
+  await tx.wait();
+
+  console.log("✅ Checked in tokenId:", tokenId.toString());
+  console.log("ticketUsed(tokenId):", await platform.ticketUsed(tokenId));
 }
 
 main().catch((e) => {
