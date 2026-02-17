@@ -2,11 +2,12 @@
 pragma solidity ^0.8.20;
 
 import "./EventTicketNFT.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract TicketingPlatform {
+contract TicketingPlatform is ReentrancyGuard {
     // NFT contract
     EventTicketNFT public ticketNFT;
-    
+
     constructor(address nftAddress) {
         ticketNFT = EventTicketNFT(nftAddress);
     }
@@ -30,7 +31,10 @@ contract TicketingPlatform {
     event TicketCreated(uint256 indexed tokenId, uint256 indexed eventId);
     event TicketPurchased(uint256 indexed eventId, uint256 indexed tokenId, address indexed buyer, uint256 price);
     event TicketCheckedIn(uint256 indexed eventId, uint256 indexed tokenId, address indexed verifier, address attendee);
-
+    event ResaleRulesUpdated(uint256 indexed eventId, bool resaleEnabled, uint256 maxResalePrice, uint16 royaltyBps);
+    event ListedForResale(uint256 indexed listingId, uint256 indexed tokenId, address indexed seller, uint256 price);
+    event ResalePurchased(uint256 indexed listingId, uint256 indexed tokenId, address indexed seller, address buyer, uint256 price, uint256 royaltyPaid);
+    event ListingCancelled(uint256 indexed listingId, uint256 indexed tokenId, address indexed seller);
 
     // Errors
     error EmptyName();
@@ -48,10 +52,14 @@ contract TicketingPlatform {
     error NotVenueVerifier();
     error TicketAlreadyUsed();
     error NotTicketOwner();
+    error ResaleDisabled();
+    error PriceTooHigh();
+    error InvalidPrice();
+    error NotApproved();
+    error ListingNotFound();
+    error ListingInactive();
 
-
-
-    // Event data structure
+    // Event data structure (full info for UI)
     struct EventData {
         uint256 eventId;
         address organizer;
@@ -65,14 +73,24 @@ contract TicketingPlatform {
         uint256 mintedCount;
 
         bool resaleEnabled;
-        uint256 maxResalePrice; // 0 = no cap
+        uint256 maxResalePrice;
 
         uint16 royaltyBps; // basis points (500 = 5%)
         address venueVerifier; // address allowed to check-in
     }
 
+    // resale rules
+    struct ResaleRules {
+        bool resaleEnabled;
+        uint256 maxResalePrice;
+        uint16 royaltyBps;
+    }
+
     // eventId => EventData
     mapping(uint256 => EventData) public eventsById;
+
+    // eventId => ResaleRules
+    mapping(uint256 => ResaleRules) public resaleRulesByEvent;
 
     // next event id
     uint256 public nextEventId = 1;
@@ -146,6 +164,12 @@ contract TicketingPlatform {
             venueVerifier: venueVerifier
         });
 
+        resaleRulesByEvent[eventId] = ResaleRules({
+            resaleEnabled: resaleEnabled,
+            maxResalePrice: maxResalePrice,
+            royaltyBps: royaltyBps
+        });
+
         emit EventCreated(
             eventId,
             msg.sender,
@@ -163,7 +187,7 @@ contract TicketingPlatform {
 
     // mint tickets
     function mintTickets(uint256 eventId, uint256 quantity) external returns (uint256 firstTokenId, uint256 lastTokenId) {
-        if (quantity == 0) revert InvalidMaxSupply(); // reuse existing error (simple) or change later
+        if (quantity == 0) revert InvalidMaxSupply();
 
         EventData storage e = eventsById[eventId];
         if (e.organizer == address(0)) revert EventNotFound();
@@ -192,8 +216,37 @@ contract TicketingPlatform {
         emit TicketsMinted(eventId, quantity, firstTokenId, lastTokenId);
     }
 
+    // set resale rules
+    function setResaleRules(
+        uint256 eventId,
+        bool resaleEnabled,
+        uint256 maxResalePrice,
+        uint16 royaltyBps
+    ) external {
+        EventData storage e = eventsById[eventId];
+        if (e.organizer == address(0)) revert EventNotFound();
+        if (e.organizer != msg.sender) revert NotOrganizer();
+        if (royaltyBps > 10_000) revert InvalidRoyaltyBps();
+
+        if (!resaleEnabled) {
+            maxResalePrice = 0;
+        }
+
+        e.resaleEnabled = resaleEnabled;
+        e.maxResalePrice = maxResalePrice;
+        e.royaltyBps = royaltyBps;
+
+        resaleRulesByEvent[eventId] = ResaleRules({
+            resaleEnabled: resaleEnabled,
+            maxResalePrice: maxResalePrice,
+            royaltyBps: royaltyBps
+        });
+
+        emit ResaleRulesUpdated(eventId, resaleEnabled, maxResalePrice, royaltyBps);
+    }
+
     // buy primary ticket
-    function buyPrimary(uint256 eventId) external payable returns (uint256 tokenId) {
+    function buyPrimary(uint256 eventId) external payable nonReentrant returns (uint256 tokenId) {
         EventData storage e = eventsById[eventId];
         if (e.organizer == address(0)) revert EventNotFound();
 
@@ -206,13 +259,89 @@ contract TicketingPlatform {
         primaryPool[eventId].pop();
 
         // transfer NFT to buyer
-        ticketNFT.transferFrom(address(this), msg.sender, tokenId);
+        ticketNFT.safeTransferFrom(address(this), msg.sender, tokenId);
 
         // pay organizer
         (bool ok, ) = e.organizer.call{value: msg.value}("");
         if (!ok) revert TransferFailed();
 
         emit TicketPurchased(eventId, tokenId, msg.sender, msg.value);
+    }
+
+    // list ticket for resale
+    function listForResale(uint256 tokenId, uint256 price) external returns (uint256 listingId) {
+        uint256 eventId = ticketEventId[tokenId];
+        if (eventId == 0) revert EventNotFound();
+
+        ResaleRules memory r = resaleRulesByEvent[eventId];
+        if (!r.resaleEnabled) revert ResaleDisabled();
+
+        if (ticketUsed[tokenId]) revert TicketAlreadyUsed();
+        if (price == 0) revert InvalidPrice();
+        if (r.maxResalePrice != 0 && price > r.maxResalePrice) revert PriceTooHigh();
+
+        // must own ticket
+        if (ticketNFT.ownerOf(tokenId) != msg.sender) revert NotTicketOwner();
+
+        // must approve platform to transfer NFT
+        if (ticketNFT.getApproved(tokenId) != address(this) && !ticketNFT.isApprovedForAll(msg.sender, address(this))) {
+            revert NotApproved();
+        }
+
+        listingId = nextListingId;
+        nextListingId += 1;
+
+        listingsById[listingId] = Listing({
+            listingId: listingId,
+            tokenId: tokenId,
+            seller: msg.sender,
+            price: price,
+            active: true
+        });
+
+        emit ListedForResale(listingId, tokenId, msg.sender, price);
+    }
+
+    // buy resale ticket
+    function buyResale(uint256 listingId) external payable nonReentrant returns (uint256 tokenId) {
+        Listing storage l = listingsById[listingId];
+        if (l.seller == address(0)) revert ListingNotFound();
+        if (!l.active) revert ListingInactive();
+
+        tokenId = l.tokenId;
+
+        uint256 eventId = ticketEventId[tokenId];
+        if (eventId == 0) revert EventNotFound();
+
+        EventData storage e = eventsById[eventId];
+        ResaleRules memory r = resaleRulesByEvent[eventId];
+
+        if (!r.resaleEnabled) revert ResaleDisabled();
+        if (ticketUsed[tokenId]) revert TicketAlreadyUsed();
+
+        if (msg.value != l.price) revert InvalidPayment();
+
+        // deactivate listing first (effects before interactions)
+        l.active = false;
+
+        // calculate royalty
+        uint256 royalty = (msg.value * uint256(r.royaltyBps)) / 10_000;
+        uint256 sellerAmount = msg.value - royalty;
+
+        // transfer NFT from seller to buyer
+        ticketNFT.safeTransferFrom(l.seller, msg.sender, tokenId);
+
+        // pay seller
+        (bool okSeller, ) = l.seller.call{value: sellerAmount}("");
+        if (!okSeller) revert TransferFailed();
+
+        // pay organizer royalty
+        if (royalty > 0) {
+            (bool okOrg, ) = e.organizer.call{value: royalty}("");
+            if (!okOrg) revert TransferFailed();
+        }
+
+        emit ResalePurchased(listingId, tokenId, l.seller, msg.sender, msg.value, royalty);
     }
 
     // check-in ticket
