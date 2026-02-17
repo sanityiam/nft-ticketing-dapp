@@ -344,6 +344,15 @@ contract TicketingPlatform is ReentrancyGuard {
         emit ResalePurchased(listingId, tokenId, l.seller, msg.sender, msg.value, royalty);
     }
 
+    function verifyTicket(uint256 tokenId, address wallet) external view returns (bool ok) {
+        uint256 eventId = ticketEventId[tokenId];
+        if (eventId == 0) return false;
+        if (ticketUsed[tokenId]) return false;
+        if (ticketNFT.ownerOf(tokenId
+        ) != wallet) return false;
+        return true;
+    }
+
     // check-in ticket
     function checkIn(uint256 tokenId, address attendee) external {
         uint256 eventId = ticketEventId[tokenId];
