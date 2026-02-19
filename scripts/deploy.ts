@@ -3,6 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { exportToFrontend } from "./utils/export-frontend.js";
 
+function chainIdToName(chainId: number) {
+  if (chainId === 31337) return "localhost";
+  if (chainId === 11155111) return "sepolia";
+  return `chain-${chainId}`;
+}
+
 type DeploymentJson = {
   chainId: number;
   network: string;
@@ -15,13 +21,15 @@ async function main() {
   const hre = await network.connect();
   const { ethers } = hre;
 
-  const networkName =
-  process.env.DEPLOYMENT_NAME ??
-  process.env.HARDHAT_NETWORK ??
-  "hardhat";
-
   const [deployer] = await ethers.getSigners();
   console.log("Deployer:", deployer.address);
+
+  const chainId = Number((await ethers.provider.getNetwork()).chainId);
+
+const deploymentName =
+  process.env.DEPLOYMENT_NAME?.trim() ||
+  process.env.HARDHAT_NETWORK?.trim() ||
+  chainIdToName(chainId);
 
   // deploy nft
   const NFT = await ethers.getContractFactory("EventTicketNFT", deployer);
@@ -53,13 +61,12 @@ async function main() {
   const outDir = path.join(process.cwd(), "deployments");
   fs.mkdirSync(outDir, { recursive: true });
 
-  const outPath = path.join(outDir, `${networkName}.json`);
+  const outPath = path.join(outDir, `${deploymentName}.json`);
 
-  const chainId = Number((await ethers.provider.getNetwork()).chainId);
 
   const payload: DeploymentJson = {
     chainId,
-    network: networkName,
+    network: deploymentName,
     deployedAt: new Date().toISOString(),
     deployer: deployer.address,
     contracts: {

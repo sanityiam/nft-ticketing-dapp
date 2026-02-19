@@ -14,7 +14,7 @@ function runStep(label: string, command: string) {
 }
 
 function detectNetwork(): string {
-  return process.env.HARDHAT_NETWORK ?? "localhost";
+  return (process.env.NETWORK ?? process.env.HARDHAT_NETWORK ?? "localhost").trim();
 }
 
 function printDeploymentInfo(networkName: string) {
@@ -43,20 +43,19 @@ async function main() {
 
   runStep(
     "Deploy contracts",
-    "DEPLOYMENT_NAME=localhost npx hardhat run scripts/deploy.ts --network localhost"
+    `DEPLOYMENT_NAME=${networkName} npx hardhat run scripts/deploy.ts --network ${networkName}`
   );
-
 
   printDeploymentInfo(networkName);
 
   runStep(
     "Smoke test (without check-in)",
-    `DO_CHECKIN=0 npx hardhat run scripts/smoke.ts --network ${networkName}`
+    `DEPLOYMENT_NAME=${networkName} DO_CHECKIN=0 npx hardhat run scripts/smoke.ts --network ${networkName}`
   );
 
   runStep(
     "Check-in validation",
-    `npx hardhat run scripts/checkin-smoke.ts --network ${networkName}`
+    `DEPLOYMENT_NAME=${networkName} npx hardhat run scripts/checkin-smoke.ts --network ${networkName}`
   );
 
   const duration = ((Date.now() - start) / 1000).toFixed(2);

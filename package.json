@@ -9,7 +9,7 @@
     "smoke": "hardhat run scripts/smoke.ts --network localhost",
     "smoke:nocheck": "DO_CHECKIN=0 hardhat run scripts/smoke.ts --network localhost",
     "checkin": "hardhat run scripts/checkin-smoke.ts --network localhost",
-    "demo": "hardhat run scripts/demo.ts --network localhost",
+    "demo": "hardhat run scripts/demo.ts",
     "demo:reset": "hardhat clean && npm run demo",
     "test": "hardhat test"
   },
@@ -22,6 +22,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.19.11",
     "chai": "^5.3.3",
+    "dotenv": "^17.3.1",
     "ethers": "^6.16.0",
     "forge-std": "github:foundry-rs/forge-std#v1.9.4",
     "hardhat": "^3.1.8",
