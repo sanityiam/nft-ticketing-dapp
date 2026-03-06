@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="900" height="500" viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg">
-  <rect width="900" height="500" rx="28" fill="#0B0F17"/>
-  <rect x="40" y="40" width="820" height="420" rx="22" fill="#131A2A"/>
-  <text x="70" y="120" font-size="46" fill="#FFFFFF" font-family="Arial, sans-serif" font-weight="700">Dubai Concert</text>
-  <text x="70" y="175" font-size="26" fill="#A7B2C6" font-family="Arial, sans-serif">Coca-Cola Arena</text>
+<svg width="1200" height="700" viewBox="0 0 1200 700" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="700" rx="36" fill="#0d1321"/>
+  <rect x="40" y="40" width="1120" height="620" rx="28" fill="#1d2d44"/>
+  <rect x="70" y="70" width="1060" height="560" rx="24" fill="#111827"/>
+  <text x="100" y="160" fill="#ffffff" font-size="54" font-family="Arial, sans-serif" font-weight="700">Dubai Concert</text>
+  <text x="100" y="220" fill="#cbd5e1" font-size="28" font-family="Arial, sans-serif">Coca-Cola Arena</text>
+  <text x="100" y="270" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">2026-03-13T15:09:10.000Z</text>
 
-  <text x="70" y="270" font-size="22" fill="#A7B2C6" font-family="Arial, sans-serif">Ticket ID</text>
-  <text x="70" y="315" font-size="44" fill="#FFFFFF" font-family="Arial, sans-serif" font-weight="700">#9</text>
+  <line x1="760" y1="90" x2="760" y2="610" stroke="#334155" stroke-width="3" stroke-dasharray="14 10"/>
 
-  <text x="70" y="410" font-size="18" fill="#6E7A91" font-family="Arial, sans-serif">Verified on-chain • Resale rules enforced by smart contract</text>
+  <text x="100" y="390" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">Token ID</text>
+  <text x="100" y="455" fill="#ffffff" font-size="64" font-family="Arial, sans-serif" font-weight="700">#9</text>
+
+  <text x="100" y="560" fill="#64748b" font-size="20" font-family="Arial, sans-serif">Verified on-chain • resale rules enforced • check-in tracked</text>
+
+  <text x="810" y="210" fill="#94a3b8" font-size="20" font-family="Arial, sans-serif">Type</text>
+  <text x="810" y="250" fill="#ffffff" font-size="30" font-family="Arial, sans-serif" font-weight="700">Event Ticket</text>
+
+  <text x="810" y="340" fill="#94a3b8" font-size="20" font-family="Arial, sans-serif">Collection</text>
+  <text x="810" y="380" fill="#ffffff" font-size="30" font-family="Arial, sans-serif" font-weight="700">ETIX</text>
+
+  <text x="810" y="500" fill="#94a3b8" font-size="20" font-family="Arial, sans-serif">Network</text>
+  <text x="810" y="540" fill="#ffffff" font-size="30" font-family="Arial, sans-serif" font-weight="700">Ethereum Sepolia</text>
 </svg>
