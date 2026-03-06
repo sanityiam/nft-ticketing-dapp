@@ -1,0 +1,44 @@
+{
+  "name": "Dubai Concert Ticket #3",
+  "description": "NFT ticket for Dubai Concert at Coca-Cola Arena. Ownership is verified on-chain. Resale rules and used status are enforced by the TicketingPlatform smart contract.",
+  "image": "https://sanityiam.github.io/nft-ticketing-dapp/metadata/3.svg",
+  "external_url": "https://sepolia.etherscan.io/token/0x7aaB99486f93Da3Fa4F0FAa22BA232625bBe23B7?a=3",
+  "attributes": [
+    {
+      "trait_type": "Event ID",
+      "value": "1"
+    },
+    {
+      "trait_type": "Event",
+      "value": "Dubai Concert"
+    },
+    {
+      "trait_type": "Venue",
+      "value": "Coca-Cola Arena"
+    },
+    {
+      "trait_type": "Date",
+      "value": "2026-03-13T13:50:39.000Z"
+    },
+    {
+      "trait_type": "Owner",
+      "value": "0x3E7E1576B9EA5b27f9b60AaC1E8DAA271894F3C7"
+    },
+    {
+      "trait_type": "Used",
+      "value": "No"
+    },
+    {
+      "trait_type": "Resale Enabled",
+      "value": "Yes"
+    },
+    {
+      "trait_type": "Royalty Bps",
+      "value": 500
+    },
+    {
+      "trait_type": "Base Price ETH",
+      "value": "0.01"
+    }
+  ]
+}
