@@ -1,8 +1,8 @@
 {
-  "name": "AC/DC Concert Ticket #2",
-  "description": "NFT ticket for AC/DC Concert at Krocus City Hall. Event ID 1. Ownership, resale and used-status are enforced on-chain.",
+  "name": "Omega Concert Ticket #2",
+  "description": "NFT ticket for Omega Concert at Maryinka. Event ID 1. Ownership, resale and used-status are enforced on-chain.",
   "image": "https://sanityiam.github.io/nft-ticketing-dapp/metadata/2.svg",
-  "external_url": "https://sepolia.etherscan.io/token/0xDe5aa0d8712ADf52b6e12793B54088C12F3EaC8E?a=2",
+  "external_url": "https://sepolia.etherscan.io/token/0x327Adf979375638a2a5ed967952DD701A8e5fF76?a=2",
   "attributes": [
     {
       "trait_type": "Event ID",
@@ -10,19 +10,19 @@
     },
     {
       "trait_type": "Event",
-      "value": "AC/DC Concert"
+      "value": "Omega Concert"
     },
     {
       "trait_type": "Venue",
-      "value": "Krocus City Hall"
+      "value": "Maryinka"
     },
     {
       "trait_type": "Date",
-      "value": "2026-03-31T11:40:00.000Z"
+      "value": "2026-03-20T09:00:00.000Z"
     },
     {
       "trait_type": "Owner",
-      "value": "0x50a146251241161713549aeA6ABaAC6896b4b5eA"
+      "value": "0x05E06Af4173125047DD4434fC1DcC14e0DD9C6c1"
     },
     {
       "trait_type": "Used",
@@ -38,7 +38,7 @@
     },
     {
       "trait_type": "Base Price ETH",
-      "value": "0.01"
+      "value": "0.011"
     }
   ]
 }

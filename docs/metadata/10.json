@@ -1,28 +1,28 @@
 {
-  "name": "Dubai Concert Ticket #10",
-  "description": "NFT ticket for Dubai Concert at Coca-Cola Arena. Ownership is verified on-chain. Resale rules and used status are enforced by the TicketingPlatform smart contract.",
+  "name": "Omega Concert Ticket #10",
+  "description": "NFT ticket for Omega Concert at Maryinka. Event ID 1. Ownership, resale and used-status are enforced on-chain.",
   "image": "https://sanityiam.github.io/nft-ticketing-dapp/metadata/10.svg",
-  "external_url": "https://sepolia.etherscan.io/token/0x7aaB99486f93Da3Fa4F0FAa22BA232625bBe23B7?a=10",
+  "external_url": "https://sepolia.etherscan.io/token/0x327Adf979375638a2a5ed967952DD701A8e5fF76?a=10",
   "attributes": [
     {
       "trait_type": "Event ID",
-      "value": "2"
+      "value": "1"
     },
     {
       "trait_type": "Event",
-      "value": "Dubai Concert"
+      "value": "Omega Concert"
     },
     {
       "trait_type": "Venue",
-      "value": "Coca-Cola Arena"
+      "value": "Maryinka"
     },
     {
       "trait_type": "Date",
-      "value": "2026-03-13T15:09:10.000Z"
+      "value": "2026-03-20T09:00:00.000Z"
     },
     {
       "trait_type": "Owner",
-      "value": "0x4A4cd7968a073456Aa6b0f7B4cA330ED373c9136"
+      "value": "0x05E06Af4173125047DD4434fC1DcC14e0DD9C6c1"
     },
     {
       "trait_type": "Used",
@@ -38,7 +38,7 @@
     },
     {
       "trait_type": "Base Price ETH",
-      "value": "0.01"
+      "value": "0.011"
     }
   ]
 }

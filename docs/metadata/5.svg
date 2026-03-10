@@ -16,9 +16,9 @@
 
   <text x="100" y="150" fill="#a78bfa" font-size="28" font-family="Arial, sans-serif" font-weight="700">NFT TICKETING DAPP</text>
 
-  <text x="100" y="245" fill="#ffffff" font-size="56" font-family="Arial, sans-serif" font-weight="700">AC/DC Concert</text>
-  <text x="100" y="305" fill="#cbd5e1" font-size="28" font-family="Arial, sans-serif">Krocus City Hall</text>
-  <text x="100" y="350" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">2026-03-31T11:40:00.000Z</text>
+  <text x="100" y="245" fill="#ffffff" font-size="56" font-family="Arial, sans-serif" font-weight="700">Omega Concert</text>
+  <text x="100" y="305" fill="#cbd5e1" font-size="28" font-family="Arial, sans-serif">Maryinka</text>
+  <text x="100" y="350" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">2026-03-20T09:00:00.000Z</text>
 
   <rect x="100" y="400" width="1000" height="2" fill="#334155"/>
 

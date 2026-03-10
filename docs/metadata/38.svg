@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="1200" rx="48" fill="url(#bg)"/>
+  <rect x="70" y="70" width="1060" height="1060" rx="36" fill="url(#panel)" stroke="#7c3aed" stroke-width="4"/>
+
+  <text x="100" y="150" fill="#a78bfa" font-size="28" font-family="Arial, sans-serif" font-weight="700">NFT TICKETING DAPP</text>
+
+  <text x="100" y="245" fill="#ffffff" font-size="56" font-family="Arial, sans-serif" font-weight="700">Omega Concert</text>
+  <text x="100" y="305" fill="#cbd5e1" font-size="28" font-family="Arial, sans-serif">Maryinka</text>
+  <text x="100" y="350" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">2026-03-20T09:00:00.000Z</text>
+
+  <rect x="100" y="400" width="1000" height="2" fill="#334155"/>
+
+  <rect x="100" y="455" width="480" height="220" rx="24" fill="#0b1220" stroke="#334155"/>
+  <text x="130" y="510" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">EVENT ID</text>
+  <text x="130" y="575" fill="#ffffff" font-size="52" font-family="Arial, sans-serif" font-weight="700">1</text>
+  <text x="130" y="635" fill="#64748b" font-size="20" font-family="Arial, sans-serif">On-chain event reference</text>
+
+  <rect x="620" y="455" width="480" height="220" rx="24" fill="#0b1220" stroke="#334155"/>
+  <text x="650" y="510" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">TOKEN ID</text>
+  <text x="650" y="575" fill="#ffffff" font-size="52" font-family="Arial, sans-serif" font-weight="700">#38</text>
+  <text x="650" y="635" fill="#64748b" font-size="20" font-family="Arial, sans-serif">Unique NFT ticket ID</text>
+
+  <rect x="100" y="730" width="1000" height="220" rx="24" fill="#0b1220" stroke="#334155"/>
+  <text x="130" y="790" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">STATUS</text>
+  <text x="130" y="860" fill="#22c55e" font-size="56" font-family="Arial, sans-serif" font-weight="700">VALID</text>
+  <text x="130" y="920" fill="#64748b" font-size="20" font-family="Arial, sans-serif">Primary + resale + check-in enforced by smart contract</text>
+
+  <text x="100" y="1045" fill="#64748b" font-size="20" font-family="Arial, sans-serif">
+    Ethereum Sepolia • Square wallet-friendly NFT preview
+  </text>
+</svg>
