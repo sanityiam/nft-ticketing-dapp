@@ -372,6 +372,10 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
         emit TicketCheckedIn(eventId, tokenId, msg.sender, attendee);
     }
 
+    function getPrimaryPoolTokenIds(uint256 eventId) external view returns (uint256[] memory) {
+    return primaryPool[eventId];
+}
+
     // sanity check function
     function version() external pure returns (string memory) {
         return "TicketingPlatform v0.1 (data structures)";

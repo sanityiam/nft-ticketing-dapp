@@ -13,7 +13,8 @@
     "demo:reset": "hardhat clean && npm run demo",
     "test": "hardhat test",
     "metadata:sepolia": "DEPLOYMENT_NAME=sepolia hardhat run scripts/generate-metadata.ts --network sepolia",
-    "metadata:local": "DEPLOYMENT_NAME=localhost hardhat run scripts/generate-metadata.ts --network localhost"
+    "metadata:local": "DEPLOYMENT_NAME=localhost hardhat run scripts/generate-metadata.ts --network localhost",
+    "set-base-uri:sepolia": "DEPLOYMENT_NAME=sepolia hardhat run scripts/set-base-uri.ts --network sepolia"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^4.0.4",
