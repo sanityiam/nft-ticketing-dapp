@@ -1,8 +1,8 @@
 {
-  "name": "Dubai Concert Ticket #2",
-  "description": "NFT ticket for Dubai Concert at Coca-Cola Arena. Ownership is verified on-chain. Resale rules and used status are enforced by the TicketingPlatform smart contract.",
+  "name": "AC/DC Concert Ticket #2",
+  "description": "NFT ticket for AC/DC Concert at Krocus City Hall. Event ID 1. Ownership, resale and used-status are enforced on-chain.",
   "image": "https://sanityiam.github.io/nft-ticketing-dapp/metadata/2.svg",
-  "external_url": "https://sepolia.etherscan.io/token/0x7aaB99486f93Da3Fa4F0FAa22BA232625bBe23B7?a=2",
+  "external_url": "https://sepolia.etherscan.io/token/0xDe5aa0d8712ADf52b6e12793B54088C12F3EaC8E?a=2",
   "attributes": [
     {
       "trait_type": "Event ID",
@@ -10,19 +10,19 @@
     },
     {
       "trait_type": "Event",
-      "value": "Dubai Concert"
+      "value": "AC/DC Concert"
     },
     {
       "trait_type": "Venue",
-      "value": "Coca-Cola Arena"
+      "value": "Krocus City Hall"
     },
     {
       "trait_type": "Date",
-      "value": "2026-03-13T13:50:39.000Z"
+      "value": "2026-03-31T11:40:00.000Z"
     },
     {
       "trait_type": "Owner",
-      "value": "0x3E7E1576B9EA5b27f9b60AaC1E8DAA271894F3C7"
+      "value": "0x50a146251241161713549aeA6ABaAC6896b4b5eA"
     },
     {
       "trait_type": "Used",
