@@ -1,24 +1,24 @@
 {
-  "name": "Omega Concert Ticket #49",
-  "description": "NFT ticket for Omega Concert at Maryinka. Event ID 1. Ownership, resale and used-status are enforced on-chain.",
-  "image": "https://sanityiam.github.io/nft-ticketing-dapp/metadata/49.svg",
-  "external_url": "https://sepolia.etherscan.io/token/0x327Adf979375638a2a5ed967952DD701A8e5fF76?a=49",
+  "name": "Serhii Concert Ticket #55",
+  "description": "NFT ticket for Serhii Concert at Dubai Opera. Event ID 2. Ownership, resale and used-status are enforced on-chain.",
+  "image": "https://sanityiam.github.io/nft-ticketing-dapp/metadata/55.svg",
+  "external_url": "https://sepolia.etherscan.io/token/0x327Adf979375638a2a5ed967952DD701A8e5fF76?a=55",
   "attributes": [
     {
       "trait_type": "Event ID",
-      "value": "1"
+      "value": "2"
     },
     {
       "trait_type": "Event",
-      "value": "Omega Concert"
+      "value": "Serhii Concert"
     },
     {
       "trait_type": "Venue",
-      "value": "Maryinka"
+      "value": "Dubai Opera"
     },
     {
       "trait_type": "Date",
-      "value": "2026-03-20 / 13:00"
+      "value": "2026-03-31 / 22:00"
     },
     {
       "trait_type": "Owner",
@@ -38,7 +38,7 @@
     },
     {
       "trait_type": "Base Price ETH",
-      "value": "0.011"
+      "value": "0.01"
     }
   ]
 }

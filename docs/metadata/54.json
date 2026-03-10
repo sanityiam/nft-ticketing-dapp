@@ -1,0 +1,44 @@
+{
+  "name": "Serhii Concert Ticket #54",
+  "description": "NFT ticket for Serhii Concert at Dubai Opera. Event ID 2. Ownership, resale and used-status are enforced on-chain.",
+  "image": "https://sanityiam.github.io/nft-ticketing-dapp/metadata/54.svg",
+  "external_url": "https://sepolia.etherscan.io/token/0x327Adf979375638a2a5ed967952DD701A8e5fF76?a=54",
+  "attributes": [
+    {
+      "trait_type": "Event ID",
+      "value": "2"
+    },
+    {
+      "trait_type": "Event",
+      "value": "Serhii Concert"
+    },
+    {
+      "trait_type": "Venue",
+      "value": "Dubai Opera"
+    },
+    {
+      "trait_type": "Date",
+      "value": "2026-03-31 / 22:00"
+    },
+    {
+      "trait_type": "Owner",
+      "value": "0x05E06Af4173125047DD4434fC1DcC14e0DD9C6c1"
+    },
+    {
+      "trait_type": "Used",
+      "value": "No"
+    },
+    {
+      "trait_type": "Resale Enabled",
+      "value": "Yes"
+    },
+    {
+      "trait_type": "Royalty Bps",
+      "value": 500
+    },
+    {
+      "trait_type": "Base Price ETH",
+      "value": "0.01"
+    }
+  ]
+}
