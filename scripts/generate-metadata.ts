@@ -44,27 +44,34 @@ function makeSquareSvg(
     </linearGradient>
   </defs>
 
-  <rect width="1200" height="1200" rx="40" fill="url(#bg)"/>
-  <rect x="60" y="60" width="1080" height="1080" rx="36" fill="url(#panel)" stroke="#7c3aed" stroke-width="4"/>
+  <rect width="1200" height="1200" rx="48" fill="url(#bg)"/>
+  <rect x="70" y="70" width="1060" height="1060" rx="36" fill="url(#panel)" stroke="#7c3aed" stroke-width="4"/>
 
   <text x="100" y="150" fill="#a78bfa" font-size="28" font-family="Arial, sans-serif" font-weight="700">NFT TICKETING DAPP</text>
-  <text x="100" y="240" fill="#ffffff" font-size="64" font-family="Arial, sans-serif" font-weight="700">${safeName}</text>
-  <text x="100" y="310" fill="#cbd5e1" font-size="32" font-family="Arial, sans-serif">${safeVenue}</text>
-  <text x="100" y="360" fill="#94a3b8" font-size="24" font-family="Arial, sans-serif">${safeDate}</text>
 
-  <rect x="100" y="430" width="1000" height="2" fill="#334155"/>
+  <text x="100" y="245" fill="#ffffff" font-size="56" font-family="Arial, sans-serif" font-weight="700">${safeName}</text>
+  <text x="100" y="305" fill="#cbd5e1" font-size="28" font-family="Arial, sans-serif">${safeVenue}</text>
+  <text x="100" y="350" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">${safeDate}</text>
 
-  <text x="100" y="530" fill="#94a3b8" font-size="24" font-family="Arial, sans-serif">EVENT ID</text>
-  <text x="100" y="585" fill="#ffffff" font-size="48" font-family="Arial, sans-serif" font-weight="700">${eventId.toString()}</text>
+  <rect x="100" y="400" width="1000" height="2" fill="#334155"/>
 
-  <text x="100" y="690" fill="#94a3b8" font-size="24" font-family="Arial, sans-serif">TOKEN ID</text>
-  <text x="100" y="745" fill="#ffffff" font-size="48" font-family="Arial, sans-serif" font-weight="700">#${tokenId.toString()}</text>
+  <rect x="100" y="455" width="480" height="220" rx="24" fill="#0b1220" stroke="#334155"/>
+  <text x="130" y="510" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">EVENT ID</text>
+  <text x="130" y="575" fill="#ffffff" font-size="52" font-family="Arial, sans-serif" font-weight="700">${eventId.toString()}</text>
+  <text x="130" y="635" fill="#64748b" font-size="20" font-family="Arial, sans-serif">On-chain event reference</text>
 
-  <text x="100" y="850" fill="#94a3b8" font-size="24" font-family="Arial, sans-serif">STATUS</text>
-  <text x="100" y="905" fill="${used ? "#ef4444" : "#22c55e"}" font-size="48" font-family="Arial, sans-serif" font-weight="700">${safeStatus}</text>
+  <rect x="620" y="455" width="480" height="220" rx="24" fill="#0b1220" stroke="#334155"/>
+  <text x="650" y="510" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">TOKEN ID</text>
+  <text x="650" y="575" fill="#ffffff" font-size="52" font-family="Arial, sans-serif" font-weight="700">#${tokenId.toString()}</text>
+  <text x="650" y="635" fill="#64748b" font-size="20" font-family="Arial, sans-serif">Unique NFT ticket ID</text>
 
-  <text x="100" y="1030" fill="#64748b" font-size="22" font-family="Arial, sans-serif">
-    On-chain ticket • primary + resale • verification enforced
+  <rect x="100" y="730" width="1000" height="220" rx="24" fill="#0b1220" stroke="#334155"/>
+  <text x="130" y="790" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">STATUS</text>
+  <text x="130" y="860" fill="${used ? "#ef4444" : "#22c55e"}" font-size="56" font-family="Arial, sans-serif" font-weight="700">${safeStatus}</text>
+  <text x="130" y="920" fill="#64748b" font-size="20" font-family="Arial, sans-serif">Primary + resale + check-in enforced by smart contract</text>
+
+  <text x="100" y="1045" fill="#64748b" font-size="20" font-family="Arial, sans-serif">
+    Ethereum Sepolia • Square wallet-friendly NFT preview
   </text>
 </svg>`;
 }
