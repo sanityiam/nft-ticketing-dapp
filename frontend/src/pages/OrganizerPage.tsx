@@ -9,13 +9,13 @@ function toUnixFromDatetimeLocal(value: string) {
 
 export default function OrganizerPage() {
   const [address, setAddress] = useState("");
-  const [name, setName] = useState("Dubai Concert");
-  const [venue, setVenue] = useState("Coca-Cola Arena");
+  const [name, setName] = useState("");
+  const [venue, setVenue] = useState("");
   const [eventDateTime, setEventDateTime] = useState("");
-  const [price, setPrice] = useState("0.01");
-  const [maxSupply, setMaxSupply] = useState("10");
-  const [quantity, setQuantity] = useState("5");
-  const [eventId, setEventId] = useState("1");
+  const [price, setPrice] = useState("");
+  const [maxSupply, setMaxSupply] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [eventId, setEventId] = useState("");
   const [createdEventId, setCreatedEventId] = useState("");
 
   async function handleConnect() {
@@ -29,8 +29,8 @@ export default function OrganizerPage() {
 
   async function createEvent() {
     try {
-      if (!eventDateTime) {
-        alert("Please choose the event date and time");
+      if (!name || !venue || !eventDateTime || !price || !maxSupply) {
+        alert("Please fill all Create Event fields");
         return;
       }
 
@@ -53,8 +53,8 @@ export default function OrganizerPage() {
       const newEventId = log?.args?.eventId?.toString();
 
       if (newEventId) {
-        setEventId(newEventId);
         setCreatedEventId(newEventId);
+        setEventId(newEventId);
       }
 
       alert(`Event created${newEventId ? `: ${newEventId}` : ""}`);
@@ -66,6 +66,11 @@ export default function OrganizerPage() {
 
   async function mintTickets() {
     try {
+      if (!eventId || !quantity) {
+        alert("Please provide event ID and quantity");
+        return;
+      }
+
       const { ticketingPlatform } = await getContracts();
       const tx = await ticketingPlatform.mintTickets(BigInt(eventId), BigInt(quantity));
       await tx.wait();

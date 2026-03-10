@@ -7,10 +7,6 @@ function ensureDir(p: string) {
   fs.mkdirSync(p, { recursive: true });
 }
 
-function toIsoFromUnix(ts: bigint) {
-  return new Date(Number(ts) * 1000).toISOString();
-}
-
 function esc(input: string) {
   return input
     .replace(/&/g, "&amp;")
@@ -18,17 +14,30 @@ function esc(input: string) {
     .replace(/>/g, "&gt;");
 }
 
+function formatEventDateTime(ts: bigint) {
+  const d = new Date(Number(ts) * 1000);
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day} / ${hours}:${minutes}`;
+}
+
 function makeSquareSvg(
   tokenId: bigint,
   eventId: bigint,
   eventName: string,
   venue: string,
-  dateIso: string,
+  dateLabel: string,
   used: boolean
 ) {
   const safeName = esc(eventName);
   const safeVenue = esc(venue);
-  const safeDate = esc(dateIso);
+  const safeDate = esc(dateLabel);
   const safeStatus = used ? "USED" : "VALID";
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -45,34 +54,27 @@ function makeSquareSvg(
   </defs>
 
   <rect width="1200" height="1200" rx="48" fill="url(#bg)"/>
-  <rect x="70" y="70" width="1060" height="1060" rx="36" fill="url(#panel)" stroke="#7c3aed" stroke-width="4"/>
+  <rect x="60" y="60" width="1080" height="1080" rx="36" fill="url(#panel)" stroke="#7c3aed" stroke-width="4"/>
 
-  <text x="100" y="150" fill="#a78bfa" font-size="28" font-family="Arial, sans-serif" font-weight="700">NFT TICKETING DAPP</text>
+  <text x="100" y="145" fill="#a78bfa" font-size="28" font-family="Arial, sans-serif" font-weight="700">NFT TICKETING DAPP</text>
 
   <text x="100" y="245" fill="#ffffff" font-size="56" font-family="Arial, sans-serif" font-weight="700">${safeName}</text>
   <text x="100" y="305" fill="#cbd5e1" font-size="28" font-family="Arial, sans-serif">${safeVenue}</text>
-  <text x="100" y="350" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">${safeDate}</text>
+  <text x="100" y="350" fill="#94a3b8" font-size="24" font-family="Arial, sans-serif">${safeDate}</text>
 
-  <rect x="100" y="400" width="1000" height="2" fill="#334155"/>
+  <rect x="100" y="405" width="1000" height="2" fill="#334155"/>
 
-  <rect x="100" y="455" width="480" height="220" rx="24" fill="#0b1220" stroke="#334155"/>
-  <text x="130" y="510" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">EVENT ID</text>
-  <text x="130" y="575" fill="#ffffff" font-size="52" font-family="Arial, sans-serif" font-weight="700">${eventId.toString()}</text>
-  <text x="130" y="635" fill="#64748b" font-size="20" font-family="Arial, sans-serif">On-chain event reference</text>
+  <rect x="100" y="465" width="470" height="260" rx="24" fill="#0b1220" stroke="#334155"/>
+  <text x="130" y="525" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">EVENT ID</text>
+  <text x="130" y="605" fill="#ffffff" font-size="62" font-family="Arial, sans-serif" font-weight="700">${eventId.toString()}</text>
 
-  <rect x="620" y="455" width="480" height="220" rx="24" fill="#0b1220" stroke="#334155"/>
-  <text x="650" y="510" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">TOKEN ID</text>
-  <text x="650" y="575" fill="#ffffff" font-size="52" font-family="Arial, sans-serif" font-weight="700">#${tokenId.toString()}</text>
-  <text x="650" y="635" fill="#64748b" font-size="20" font-family="Arial, sans-serif">Unique NFT ticket ID</text>
+  <rect x="630" y="465" width="470" height="260" rx="24" fill="#0b1220" stroke="#334155"/>
+  <text x="660" y="525" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">TOKEN ID</text>
+  <text x="660" y="605" fill="#ffffff" font-size="62" font-family="Arial, sans-serif" font-weight="700">#${tokenId.toString()}</text>
 
-  <rect x="100" y="730" width="1000" height="220" rx="24" fill="#0b1220" stroke="#334155"/>
-  <text x="130" y="790" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">STATUS</text>
-  <text x="130" y="860" fill="${used ? "#ef4444" : "#22c55e"}" font-size="56" font-family="Arial, sans-serif" font-weight="700">${safeStatus}</text>
-  <text x="130" y="920" fill="#64748b" font-size="20" font-family="Arial, sans-serif">Primary + resale + check-in enforced by smart contract</text>
-
-  <text x="100" y="1045" fill="#64748b" font-size="20" font-family="Arial, sans-serif">
-    Ethereum Sepolia • Square wallet-friendly NFT preview
-  </text>
+  <rect x="100" y="785" width="1000" height="260" rx="24" fill="#0b1220" stroke="#334155"/>
+  <text x="130" y="850" fill="#94a3b8" font-size="22" font-family="Arial, sans-serif">STATUS</text>
+  <text x="130" y="940" fill="${used ? "#ef4444" : "#22c55e"}" font-size="72" font-family="Arial, sans-serif" font-weight="700">${safeStatus}</text>
 </svg>`;
 }
 
@@ -124,7 +126,7 @@ async function main() {
 
     const used = await platform.ticketUsed(tokenId);
     const e = await platform.eventsById(eventId);
-    const dateIso = toIsoFromUnix(e.dateTime);
+    const dateLabel = formatEventDateTime(e.dateTime);
 
     const imageUrl = baseUri
       ? `${baseUri}${tokenId.toString()}.svg`
@@ -142,7 +144,7 @@ async function main() {
         { trait_type: "Event ID", value: eventId.toString() },
         { trait_type: "Event", value: e.name },
         { trait_type: "Venue", value: e.venue },
-        { trait_type: "Date", value: dateIso },
+        { trait_type: "Date", value: dateLabel },
         { trait_type: "Owner", value: owner },
         { trait_type: "Used", value: used ? "Yes" : "No" },
         { trait_type: "Resale Enabled", value: e.resaleEnabled ? "Yes" : "No" },
@@ -156,7 +158,7 @@ async function main() {
       eventId,
       e.name,
       e.venue,
-      dateIso,
+      dateLabel,
       used
     );
 
