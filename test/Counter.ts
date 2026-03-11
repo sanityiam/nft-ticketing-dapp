@@ -4,7 +4,7 @@ import { network } from "hardhat";
 const { ethers } = await network.connect();
 
 describe("Counter", function () {
-  it("Should emit the Increment event when calling the inc() function", async function () {
+  it("Should emit the Increment event when running the inc() function", async function () {
     const counter = await ethers.deployContract("Counter");
 
     await expect(counter.inc()).to.emit(counter, "Increment").withArgs(1n);
@@ -14,7 +14,7 @@ describe("Counter", function () {
     const counter = await ethers.deployContract("Counter");
     const deploymentBlockNumber = await ethers.provider.getBlockNumber();
 
-    // run a series of increments
+    // run increments
     for (let i = 1; i <= 10; i++) {
       await counter.incBy(i);
     }

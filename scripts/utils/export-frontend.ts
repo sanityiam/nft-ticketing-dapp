@@ -54,7 +54,7 @@ export function exportToFrontend(deployment: DeploymentJson) {
 
     if (!fs.existsSync(artifactPath)) {
       throw new Error(
-        `Artifact not found: ${artifactPath}. Did you compile?`
+        `Not found: ${artifactPath}, please try compiling`
       );
     }
 
@@ -74,7 +74,7 @@ export function exportToFrontend(deployment: DeploymentJson) {
     );
   }
 
-  console.log("\nFrontend artifacts exported:");
+  console.log("\nFrontend exported:");
   console.log("   frontend/src/contracts/addresses.json");
   console.log("   frontend/src/contracts/abi/*.abi.json");
 }

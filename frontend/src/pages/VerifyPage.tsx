@@ -7,6 +7,8 @@ export default function VerifyPage() {
   const [tokenId, setTokenId] = useState("1");
   const [owner, setOwner] = useState("");
   const [used, setUsed] = useState<boolean | null>(null);
+  const [eventId, setEventId] = useState("");
+  const [venueVerifier, setVenueVerifier] = useState("");
   const [checking, setChecking] = useState(false);
   const [verifying, setVerifying] = useState(false);
 
@@ -23,11 +25,16 @@ export default function VerifyPage() {
     try {
       setVerifying(true);
       const { ticketingPlatform, eventTicketNFT } = await getContracts();
+
       const currentOwner = await eventTicketNFT.ownerOf(BigInt(tokenId));
       const currentUsed = await ticketingPlatform.ticketUsed(BigInt(tokenId));
+      const currentEventId = await ticketingPlatform.ticketEventId(BigInt(tokenId));
+      const eventData = await ticketingPlatform.eventsById(currentEventId);
 
       setOwner(currentOwner);
       setUsed(currentUsed);
+      setEventId(currentEventId.toString());
+      setVenueVerifier(eventData.venueVerifier);
     } catch (err: any) {
       console.error(err);
       alert(err.shortMessage || err.message || "Verify failed");
@@ -38,7 +45,18 @@ export default function VerifyPage() {
 
   async function checkIn() {
     try {
+      if (!address) {
+        alert("Please connect the verifier wallet first");
+        return;
+      }
+
+      if (venueVerifier && address.toLowerCase() !== venueVerifier.toLowerCase()) {
+        alert("Connected wallet is not the assigned venue verifier for this event");
+        return;
+      }
+
       setChecking(true);
+
       const { ticketingPlatform, eventTicketNFT } = await getContracts();
       const attendee = await eventTicketNFT.ownerOf(BigInt(tokenId));
 
@@ -98,6 +116,11 @@ export default function VerifyPage() {
 
       <div className="info-grid" style={{ marginTop: 24 }}>
         <div className="info-row">
+          <div className="label">Event ID</div>
+          <div className="value">{eventId || "-"}</div>
+        </div>
+
+        <div className="info-row">
           <div className="label">Owner</div>
           <div className="value">{owner || "-"}</div>
         </div>
@@ -107,6 +130,11 @@ export default function VerifyPage() {
           <div className={`value ${used ? "success" : ""}`}>
             {used === null ? "-" : used ? "Yes" : "No"}
           </div>
+        </div>
+
+        <div className="info-row">
+          <div className="label">Assigned Venue Verifier</div>
+          <div className="value">{venueVerifier || "-"}</div>
         </div>
       </div>
     </div>

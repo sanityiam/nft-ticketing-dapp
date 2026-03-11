@@ -41,14 +41,14 @@ export default function HomePage() {
 
   return (
     <div>
-      <div className="badge">Project overview</div>
+      <div className="badge">Overview</div>
       <h2 className="section-title" style={{ marginTop: 16 }}>
         Home
       </h2>
 
       <div className="notice">
-        This dApp demonstrates an end-to-end blockchain ticketing flow on Ethereum Sepolia:
-        event creation, ticket minting, primary purchase, resale listing, resale purchase and on-chain check-in.
+        This dApp demonstrates an end-to-end blockchain ticketing flow on Ethereum Sepolia
+        This includes event creation, ticket minting, purchasing, resale listing, resale and check-in - all on-chain
       </div>
 
       <div className="button-row">
@@ -71,18 +71,18 @@ export default function HomePage() {
 
       <div className="info-grid">
         <div className="info-row">
-          <div className="label">Organizer Flow</div>
-          <div className="value">Organizer → Create event → Mint tickets</div>
+          <div className="label">For Organisers</div>
+          <div className="value">Organiser - Create event - Mint tickets</div>
         </div>
 
         <div className="info-row">
-          <div className="label">Buyer Flow</div>
-          <div className="value">Marketplace → Buy primary or resale ticket</div>
+          <div className="label">For Buyers</div>
+          <div className="value">Marketplace - Buy primary or resale ticket</div>
         </div>
 
         <div className="info-row">
-          <div className="label">Verification Flow</div>
-          <div className="value">Verify page → Validate token → Check in ticket</div>
+          <div className="label">For Verifiers</div>
+          <div className="value">Verify page - Validate token - Check in ticket</div>
         </div>
       </div>
 
@@ -92,7 +92,7 @@ export default function HomePage() {
         Latest Event
       </h3>
 
-      {!eventData && <div className="notice">No event found yet.</div>}
+      {!eventData && <div className="notice">No event found yet</div>}
 
       {eventData && (
         <div className="info-grid">

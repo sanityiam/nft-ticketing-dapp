@@ -4,7 +4,15 @@ import { getContracts } from "../lib/contracts";
 import { connectWallet } from "../lib/ethereum";
 
 function toUnixFromDatetimeLocal(value: string) {
-  return BigInt(Math.floor(new Date(value).getTime() / 1000));
+  const [datePart, timePart] = value.split("T");
+  if (!datePart || !timePart) return 0n;
+
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+
+  return BigInt(
+    Math.floor(Date.UTC(year, month - 1, day, hour, minute, 0) / 1000)
+  );
 }
 
 export default function OrganizerPage() {
@@ -56,6 +64,12 @@ export default function OrganizerPage() {
         setCreatedEventId(newEventId);
         setEventId(newEventId);
       }
+
+      setName("");
+      setVenue("");
+      setEventDateTime("");
+      setPrice("");
+      setMaxSupply("");
 
       alert(`Event created${newEventId ? `: ${newEventId}` : ""}`);
     } catch (err: any) {

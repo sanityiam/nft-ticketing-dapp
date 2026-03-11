@@ -24,8 +24,7 @@ async function main() {
   const isSingleSigner = signers.length < 3;
 
   if (isSingleSigner) {
-    console.log("Only 1 signer available on this network. Reusing deployer as buyer1/buyer2");
-    console.log("(For a real demo with multiple wallets, do resale manually from MetaMask)");
+    console.log("Only 1 signer available on this network - Reusing deployer as buyer1/buyer2");
   }
 
   const platformOrg = await ethers.getContractAt("TicketingPlatform", PLATFORM_ADDRESS, organizer);
@@ -54,7 +53,7 @@ async function main() {
 
   const createdLog = createRcpt!.logs.find((l: any) => l.fragment?.name === "EventCreated");
   if (!createdLog || !("args" in createdLog)) {
-    throw new Error("EventCreated not found in receipt");
+    throw new Error("EventCreated not found");
   }
 
   const eventId = (createdLog as any).args.eventId as bigint;
@@ -67,7 +66,7 @@ async function main() {
 
   const purchasedLog = buyRcpt!.logs.find((l: any) => l.fragment?.name === "TicketPurchased");
   if (!purchasedLog || !("args" in purchasedLog)) {
-    throw new Error("TicketPurchased not found in receipt");
+    throw new Error("TicketPurchased not found");
   }
 
   const tokenId = (purchasedLog as any).args.tokenId as bigint;
@@ -83,7 +82,7 @@ async function main() {
 
     const listedLog = listRcpt!.logs.find((l: any) => l.fragment?.name === "ListedForResale");
     if (!listedLog || !("args" in listedLog)) {
-      throw new Error("ListedForResale not found in receipt");
+      throw new Error("ListedForResale not found");
     }
 
     const listingId = (listedLog as any).args.listingId as bigint;
@@ -119,7 +118,7 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error("Smoke test failed:");
+  console.error("smoke test failed:");
   console.error(e);
   process.exitCode = 1;
 });

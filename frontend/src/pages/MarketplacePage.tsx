@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { formatEther } from "ethers";
-import { getContracts } from "../lib/contracts";
+import { getContracts, readOnChainMetadata } from "../lib/contracts";
 import { connectWallet } from "../lib/ethereum";
 
 type ResaleCard = {
@@ -81,10 +81,7 @@ export default function MarketplacePage() {
             try {
               const tokenUri = await eventTicketNFT.tokenURI(listing.tokenId);
               if (tokenUri) {
-                const response = await fetch(tokenUri);
-                if (response.ok) {
-                  metadata = await response.json();
-                }
+                metadata = await readOnChainMetadata(tokenUri);
               }
             } catch {
               metadata = undefined;
@@ -172,7 +169,7 @@ export default function MarketplacePage() {
       </h2>
 
       <div className="notice">
-        This page is the main purchase surface for both primary inventory and resale inventory.
+        This page is main for both primary and resale tickets purchase
       </div>
 
       <div className="button-row">
@@ -196,7 +193,7 @@ export default function MarketplacePage() {
 
       {groups.length === 0 && !loading && (
         <div className="notice" style={{ marginTop: 20 }}>
-          No marketplace events found yet.
+          No marketplace events found
         </div>
       )}
 
@@ -255,7 +252,7 @@ export default function MarketplacePage() {
             </h4>
 
             {group.resaleListings.length === 0 && (
-              <div className="notice">No active resale listings for this event.</div>
+              <div className="notice">No active resale listings for this event</div>
             )}
 
             <div
@@ -282,7 +279,7 @@ export default function MarketplacePage() {
                       alt={listing.metadata?.name || `Token #${listing.tokenId}`}
                       style={{
                         width: "100%",
-                        height: 180,
+                        aspectRatio: "1 / 1",
                         objectFit: "cover",
                         borderRadius: 14,
                         marginBottom: 14,
@@ -294,7 +291,7 @@ export default function MarketplacePage() {
                     <div
                       style={{
                         width: "100%",
-                        height: 180,
+                        aspectRatio: "1 / 1",
                         borderRadius: 14,
                         marginBottom: 14,
                         border: "1px solid rgba(148, 163, 184, 0.15)",
@@ -321,10 +318,7 @@ export default function MarketplacePage() {
                   </div>
 
                   <div className="label">Seller</div>
-                  <div
-                    className="value"
-                    style={{ marginBottom: 10, fontSize: "0.9rem" }}
-                  >
+                  <div className="value" style={{ marginBottom: 10, fontSize: "0.9rem" }}>
                     {listing.seller}
                   </div>
 

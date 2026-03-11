@@ -26,43 +26,33 @@ async function main() {
 
   const chainId = Number((await ethers.provider.getNetwork()).chainId);
 
-const deploymentName =
-  process.env.DEPLOYMENT_NAME?.trim() ||
-  process.env.HARDHAT_NETWORK?.trim() ||
-  chainIdToName(chainId);
+  const deploymentName =
+    process.env.DEPLOYMENT_NAME?.trim() ||
+    process.env.HARDHAT_NETWORK?.trim() ||
+    chainIdToName(chainId);
 
-  // deploy nft
   const NFT = await ethers.getContractFactory("EventTicketNFT", deployer);
   const nft = await NFT.deploy();
   await nft.waitForDeployment();
   const nftAddress = await nft.getAddress();
   console.log("EventTicketNFT deployed:", nftAddress);
 
-  // deploy platform
   const Platform = await ethers.getContractFactory("TicketingPlatform", deployer);
   const platform = await Platform.deploy(nftAddress);
   await platform.waitForDeployment();
   const platformAddress = await platform.getAddress();
   console.log("TicketingPlatform deployed:", platformAddress);
 
-  // set minter
   await (await nft.setMinter(platformAddress)).wait();
   console.log("Minter set:", platformAddress);
 
-  const baseURI = process.env.BASE_URI ?? "";
-  if (baseURI) {
-    await (await nft.setBaseURI(baseURI)).wait();
-    console.log("BaseURI set:", baseURI);
-  } else {
-    console.log("BaseURI not set (BASE_URI env var is empty).");
-  }
+  await (await nft.setMetadataProvider(platformAddress)).wait();
+  console.log("Metadata provider set:", platformAddress);
 
-  // save deployment json
   const outDir = path.join(process.cwd(), "deployments");
   fs.mkdirSync(outDir, { recursive: true });
 
   const outPath = path.join(outDir, `${deploymentName}.json`);
-
 
   const payload: DeploymentJson = {
     chainId,
@@ -78,7 +68,6 @@ const deploymentName =
   fs.writeFileSync(outPath, JSON.stringify(payload, null, 2), "utf8");
   console.log("Saved deployment:", outPath);
 
-  // export to frontend
   try {
     exportToFrontend(payload);
   } catch (e: any) {

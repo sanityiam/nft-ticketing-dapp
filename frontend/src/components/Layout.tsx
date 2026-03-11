@@ -16,15 +16,11 @@ export default function Layout({ children }: Props) {
 
   return (
     <div className="app-shell">
-      <div className="badge">Ethereum Sepolia • Live MVP</div>
+      <div className="badge">Ethereum Sepolia Live MVP</div>
 
       <h1 className="hero-title" style={{ marginTop: 16 }}>
         nft-ticketing-dapp
       </h1>
-
-      <div className="hero-subtitle">
-        Blockchain ticketing MVP with primary sales, verification, metadata hosting and Sepolia deployment
-      </div>
 
       <nav className="navbar">
         <NavLink to="/" style={linkStyle}>

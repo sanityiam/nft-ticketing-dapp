@@ -107,11 +107,11 @@ async function main() {
   const end = nextTokenId - 1n;
 
   if (end < start) {
-    console.log("No minted tokens found.");
+    console.log("No minted tokens found");
     return;
   }
 
-  console.log(`Generating metadata for tokenIds ${start.toString()}..${end.toString()}`);
+  console.log(`Generating metadata for tokenIds ${start.toString()}-${end.toString()}`);
 
   for (let tokenId = start; tokenId <= end; tokenId++) {
     const eventId = await platform.ticketEventId(tokenId);
@@ -134,7 +134,7 @@ async function main() {
 
     const metadata = {
       name: `${e.name} Ticket #${tokenId.toString()}`,
-      description: `NFT ticket for ${e.name} at ${e.venue}. Event ID ${eventId.toString()}. Ownership, resale and used-status are enforced on-chain.`,
+      description: `NFT ticket for ${e.name} at ${e.venue}. Event ID ${eventId.toString()}. Ownership, resale and status are on-chain`,
       image: imageUrl,
       external_url:
         d.network === "sepolia"

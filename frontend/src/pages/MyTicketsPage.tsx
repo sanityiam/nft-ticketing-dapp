@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { parseEther } from "ethers";
-import { getContracts } from "../lib/contracts";
+import { getContracts, readOnChainMetadata } from "../lib/contracts";
 import { connectWallet } from "../lib/ethereum";
 
 type TicketCard = {
@@ -65,10 +65,7 @@ export default function MyTicketsPage() {
           let metadata: TicketCard["metadata"] | undefined = undefined;
           if (tokenUri) {
             try {
-              const response = await fetch(tokenUri);
-              if (response.ok) {
-                metadata = await response.json();
-              }
+              metadata = await readOnChainMetadata(tokenUri);
             } catch {
               metadata = undefined;
             }
@@ -173,7 +170,6 @@ export default function MyTicketsPage() {
       await tx.wait();
 
       alert(`Token ${tokenId} listed for resale`);
-
       await loadMyTickets();
     } catch (err: any) {
       console.error(err);
@@ -189,10 +185,6 @@ export default function MyTicketsPage() {
       <h2 className="section-title" style={{ marginTop: 16 }}>
         My Tickets
       </h2>
-
-      <div className="notice">
-        Connect your wallet and scan the currently minted token range to find tickets owned by your address.
-      </div>
 
       <div className="button-row">
         <button onClick={handleConnect}>Connect MetaMask</button>
@@ -215,7 +207,7 @@ export default function MyTicketsPage() {
 
       {tickets.length === 0 && !loading && (
         <div className="notice" style={{ marginTop: 20 }}>
-          No owned tickets found yet for the connected wallet.
+          No owned tickets found for the connected wallet
         </div>
       )}
 
@@ -246,7 +238,7 @@ export default function MyTicketsPage() {
                   alt={ticket.metadata?.name || `Ticket #${ticket.tokenId}`}
                   style={{
                     width: "100%",
-                    height: 180,
+                    aspectRatio: "1 / 1",
                     objectFit: "cover",
                     borderRadius: 14,
                     marginBottom: 14,
@@ -258,7 +250,7 @@ export default function MyTicketsPage() {
                 <div
                   style={{
                     width: "100%",
-                    height: 180,
+                    aspectRatio: "1 / 1",
                     borderRadius: 14,
                     marginBottom: 14,
                     border: "1px solid rgba(148, 163, 184, 0.15)",
@@ -285,10 +277,7 @@ export default function MyTicketsPage() {
               </div>
 
               <div className="label">Used</div>
-              <div
-                className={`value ${ticket.used ? "success" : ""}`}
-                style={{ marginBottom: 10 }}
-              >
+              <div className={`value ${ticket.used ? "success" : ""}`} style={{ marginBottom: 10 }}>
                 {ticket.used ? "Yes" : "No"}
               </div>
 
@@ -298,10 +287,7 @@ export default function MyTicketsPage() {
               </div>
 
               <div className="label">Owner</div>
-              <div
-                className="value"
-                style={{ marginBottom: 10, fontSize: "0.9rem" }}
-              >
+              <div className="value" style={{ marginBottom: 10, fontSize: "0.9rem" }}>
                 {ticket.owner}
               </div>
 
@@ -314,14 +300,12 @@ export default function MyTicketsPage() {
                 </>
               )}
 
-              <div className="label">Resale Price (ETH)</div>
+              <div className="label">Resale Price</div>
               <div className="form-stack" style={{ marginTop: 8 }}>
                 <input
                   value={ticket.resalePriceInput}
-                  onChange={(e) =>
-                    updateResalePrice(ticket.tokenId, e.target.value)
-                  }
-                  placeholder="Resale price in ETH"
+                  onChange={(e) => updateResalePrice(ticket.tokenId, e.target.value)}
+                  placeholder="Resale price"
                 />
               </div>
 
@@ -340,22 +324,6 @@ export default function MyTicketsPage() {
                   {isBusy && ticket.isApproved ? "Listing..." : "List for Resale"}
                 </button>
               </div>
-
-              {ticket.tokenUri && (
-                <>
-                  <div className="label" style={{ marginTop: 14 }}>Token URI</div>
-                  <div
-                    className="value"
-                    style={{
-                      fontSize: "0.82rem",
-                      wordBreak: "break-word",
-                      color: "#cbd5e1",
-                    }}
-                  >
-                    {ticket.tokenUri}
-                  </div>
-                </>
-              )}
             </div>
           );
         })}

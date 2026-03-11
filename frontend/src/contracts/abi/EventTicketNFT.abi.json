@@ -446,6 +446,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "metadataProvider",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -603,12 +616,12 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "newBase",
-        "type": "string"
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
       }
     ],
-    "name": "setBaseURI",
+    "name": "setMetadataProvider",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

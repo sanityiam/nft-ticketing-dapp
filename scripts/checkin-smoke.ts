@@ -18,14 +18,14 @@ async function main() {
   );
   const nft = await ethers.getContractAt("EventTicketNFT", NFT_ADDRESS);
 
-  console.log("Check-in smoke started");
+  console.log("Smoke check-in test started");
   console.log("NFT:", NFT_ADDRESS);
   console.log("Platform:", PLATFORM_ADDRESS);
 
   // find newest unused ticket
   const nextTokenId = await platform.nextTokenId(); // public in contract
   if (nextTokenId <= 1n) {
-    throw new Error("No minted tokens exist yet. Run smoke.ts first.");
+    throw new Error("No minted tokens exist yet, please run smoke.ts");
   }
 
   const LOOKBACK = 50n; // scan last 50 token ids
@@ -47,7 +47,7 @@ async function main() {
   }
 
   if (!tokenId || !attendee) {
-    throw new Error("No unused tickets found. Run smoke.ts again (without check-in) to mint/buy a fresh ticket.");
+    throw new Error("No unused tickets found, please run smoke.ts again (without check-in) to mint/buy a new ticket");
   }
 
   console.log("Selected tokenId:", tokenId.toString());
@@ -62,7 +62,7 @@ async function main() {
   console.log("verifier signer:", verifierSigner.address);
 
   if (eventData.venueVerifier.toLowerCase() !== verifierSigner.address.toLowerCase()) {
-    throw new Error("Connected signer is NOT the venue verifier for this event. Switch signer / redeploy.");
+    throw new Error("Connected user is not the venue verifier for this event, please switch user or/and redeploy");
   }
 
   // check-in

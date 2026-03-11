@@ -1,10 +1,10 @@
 {
   "chainId": 11155111,
   "network": "sepolia",
-  "deployedAt": "2026-03-10T11:09:01.117Z",
+  "deployedAt": "2026-03-10T14:48:48.419Z",
   "deployer": "0x4A4cd7968a073456Aa6b0f7B4cA330ED373c9136",
   "contracts": {
-    "EventTicketNFT": "0x327Adf979375638a2a5ed967952DD701A8e5fF76",
-    "TicketingPlatform": "0x05E06Af4173125047DD4434fC1DcC14e0DD9C6c1"
+    "EventTicketNFT": "0x4cD2b3C46eCEEDC2798bCC10CEf1C4301f79389B",
+    "TicketingPlatform": "0xa1696400cDB03C0211B3Baa18b480d68240611b1"
   }
 }

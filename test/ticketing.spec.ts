@@ -7,18 +7,16 @@ describe("TicketingPlatform (MVP)", function () {
 
     const [deployer, organizer, buyer1, buyer2, verifier] = await ethers.getSigners();
 
-    // deploy nft
     const NFT = await ethers.getContractFactory("EventTicketNFT", deployer);
     const nft = await NFT.deploy();
     await nft.waitForDeployment();
 
-    // deploy platform
     const Platform = await ethers.getContractFactory("TicketingPlatform", deployer);
     const platform = await Platform.deploy(await nft.getAddress());
     await platform.waitForDeployment();
 
-    // set minter
     await (await nft.connect(deployer).setMinter(await platform.getAddress())).wait();
+    await (await nft.connect(deployer).setMetadataProvider(await platform.getAddress())).wait();
 
     return { ethers, deployer, organizer, buyer1, buyer2, verifier, nft, platform };
   }
@@ -67,45 +65,45 @@ describe("TicketingPlatform (MVP)", function () {
     const dateTime = BigInt(now + 1000);
     const basePrice = ethers.parseEther("0.01");
 
-await expect(
-  platform.connect(organizer).createEvent(
-    "",
-    "Venue",
-    dateTime,
-    basePrice,
-    5,
-    true,
-    basePrice * 2n,
-    500,
-    verifier.address
-  )
-).to.be.revertedWithCustomError(platform, "EmptyName");
+    await expect(
+      platform.connect(organizer).createEvent(
+        "",
+        "Venue",
+        dateTime,
+        basePrice,
+        5,
+        true,
+        basePrice * 2n,
+        500,
+        verifier.address
+      )
+    ).to.be.revertedWithCustomError(platform, "EmptyName");
 
-await expect(
-  platform.connect(organizer).createEvent(
-    "Name",
-    "",
-    dateTime,
-    basePrice,
-    5,
-    true,
-    basePrice * 2n,
-    500,
-    verifier.address
-  )
-).to.be.revertedWithCustomError(platform, "EmptyVenue");
+    await expect(
+      platform.connect(organizer).createEvent(
+        "Name",
+        "",
+        dateTime,
+        basePrice,
+        5,
+        true,
+        basePrice * 2n,
+        500,
+        verifier.address
+      )
+    ).to.be.revertedWithCustomError(platform, "EmptyVenue");
   });
 
-  it("mintTickets cannot exceed maxSupply", async function () {
+  it("mintTickets cannot be more than maxSupply", async function () {
     const { platform, organizer, eventId } = await createEventFixture({ maxSupply: 2 });
 
     await (await platform.connect(organizer).mintTickets(eventId, 2)).wait();
 
-    await expect(platform.connect(organizer).mintTickets(eventId, 1)).to.be.revertedWithCustomError(platform, "SupplyExceeded");
-
+    await expect(platform.connect(organizer).mintTickets(eventId, 1))
+      .to.be.revertedWithCustomError(platform, "SupplyExceeded");
   });
 
-  it("buyPrimary transfers NFT to buyer and funds to organizer", async function () {
+  it("buyPrimary transfers NFT to buyer and funds to organiser", async function () {
     const { ethers, platform, nft, organizer, buyer1, eventId, basePrice } =
       await createEventFixture({ maxSupply: 1 });
 
@@ -132,12 +130,10 @@ await expect(
     const tokenId = 1n;
     const resalePrice = basePrice + ethers.parseEther("0.001");
 
-    // not approved yet = should revert
-    await expect(platform.connect(buyer1).listForResale(tokenId, resalePrice)).to.be.revertedWithCustomError(platform, "NotApproved");
+    await expect(platform.connect(buyer1).listForResale(tokenId, resalePrice))
+      .to.be.revertedWithCustomError(platform, "NotApproved");
 
-    // approve = should work
     await (await nft.connect(buyer1).approve(await platform.getAddress(), tokenId)).wait();
-
     await (await platform.connect(buyer1).listForResale(tokenId, resalePrice)).wait();
 
     const listing = await platform.listingsById(1n);
@@ -146,15 +142,13 @@ await expect(
     expect(listing.tokenId).to.equal(tokenId);
   });
 
-  it("listForResale respects maxResalePrice cap", async function () {
-    // cap is exactly basePrice
+  it("listForResale - maxResalePrice", async function () {
     const { platform, nft, organizer, buyer1, eventId, basePrice } =
       await createEventFixture({
         maxSupply: 1,
         basePriceEther: "0.01",
       });
 
-    // setResaleRules to enforce cap = basePrice
     await (await platform.connect(organizer).setResaleRules(eventId, true, basePrice, 500)).wait();
 
     await (await platform.connect(organizer).mintTickets(eventId, 1)).wait();
@@ -163,14 +157,13 @@ await expect(
     const tokenId = 1n;
     await (await nft.connect(buyer1).approve(await platform.getAddress(), tokenId)).wait();
 
-    // price > cap = revert
-    await expect(platform.connect(buyer1).listForResale(tokenId, basePrice + 1n)).to.be.revertedWithCustomError(platform, "PriceTooHigh");
+    await expect(platform.connect(buyer1).listForResale(tokenId, basePrice + 1n))
+      .to.be.revertedWithCustomError(platform, "PriceTooHigh");
 
-    // price == cap = ok
     await (await platform.connect(buyer1).listForResale(tokenId, basePrice)).wait();
   });
 
-  it("buyResale transfers NFT, pays royalty split, listing becomes inactive", async function () {
+  it("buyResale transfers NFT, pays royalty, ticket becomes inactive", async function () {
     const { ethers, platform, nft, organizer, buyer1, buyer2, eventId, basePrice } =
       await createEventFixture({
         maxSupply: 1,
@@ -206,13 +199,12 @@ await expect(
     expect(orgBalAfter - orgBalBefore).to.equal(royalty);
   });
 
-  it("checkIn only verifier, cannot check-in twice, cannot resell after used", async function () {
+  it("checkIn only verifier, cannot check-in twice, cannot sell after use", async function () {
     const { platform, nft, organizer, buyer1, verifier, eventId, basePrice } =
       await createEventFixture({
         maxSupply: 1,
       });
 
-    // update verifier explicitly to verifier signer
     await (await platform.connect(organizer).setResaleRules(eventId, true, basePrice * 2n, 500)).wait();
 
     await (await platform.connect(organizer).mintTickets(eventId, 1)).wait();
@@ -220,20 +212,29 @@ await expect(
 
     const tokenId = 1n;
 
-    // non-verifier cannot check-in (buyer1)
-    await expect(platform.connect(buyer1).checkIn(tokenId, buyer1.address)).to.be.revertedWithCustomError(platform, "NotVenueVerifier");
+    await expect(platform.connect(buyer1).checkIn(tokenId, buyer1.address))
+      .to.be.revertedWithCustomError(platform, "NotVenueVerifier");
 
-
-    // verifier checks in
     await (await platform.connect(verifier).checkIn(tokenId, buyer1.address)).wait();
     expect(await platform.ticketUsed(tokenId)).to.equal(true);
 
-    // cannot check in twice
-    await expect(platform.connect(verifier).checkIn(tokenId, buyer1.address)).to.be.revertedWithCustomError(platform, "TicketAlreadyUsed");
+    await expect(platform.connect(verifier).checkIn(tokenId, buyer1.address))
+      .to.be.revertedWithCustomError(platform, "TicketAlreadyUsed");
 
-
-    // cannot list after used
     await (await nft.connect(buyer1).approve(await platform.getAddress(), tokenId)).wait();
-    await expect(platform.connect(buyer1).listForResale(tokenId, basePrice)).to.be.revertedWithCustomError(platform, "TicketAlreadyUsed");
+    await expect(platform.connect(buyer1).listForResale(tokenId, basePrice))
+      .to.be.revertedWithCustomError(platform, "TicketAlreadyUsed");
+  });
+
+  it("tokenURI returns on-chain metadata json", async function () {
+    const { platform, nft, organizer, buyer1, eventId, basePrice } =
+      await createEventFixture({ maxSupply: 1 });
+
+    await (await platform.connect(organizer).mintTickets(eventId, 1)).wait();
+    await (await platform.connect(buyer1).buyPrimary(eventId, { value: basePrice })).wait();
+
+    const uri = await nft.tokenURI(1n);
+
+    expect(uri.startsWith("data:application/json;base64,")).to.equal(true);
   });
 });

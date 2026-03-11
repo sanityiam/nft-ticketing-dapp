@@ -6,14 +6,12 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
-    // nft contract
     EventTicketNFT public ticketNFT;
 
     constructor(address nftAddress) {
         ticketNFT = EventTicketNFT(nftAddress);
     }
 
-    // events
     event EventCreated(
         uint256 indexed eventId,
         address indexed organizer,
@@ -37,7 +35,6 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
     event ResalePurchased(uint256 indexed listingId, uint256 indexed tokenId, address indexed seller, address buyer, uint256 price, uint256 royaltyPaid);
     event ListingCancelled(uint256 indexed listingId, uint256 indexed tokenId, address indexed seller);
 
-    // errors
     error EmptyName();
     error EmptyVenue();
     error InvalidDateTime();
@@ -59,72 +56,51 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
     error NotApproved();
     error ListingNotFound();
     error ListingInactive();
+    error AlreadyListed();
 
-    // event data structure
     struct EventData {
         uint256 eventId;
         address organizer;
-
         string name;
         string venue;
         uint256 dateTime;
-
-        uint256 basePrice; // wei
+        uint256 basePrice;
         uint256 maxSupply;
         uint256 mintedCount;
-
         bool resaleEnabled;
         uint256 maxResalePrice;
-
-        uint16 royaltyBps; // basis points (500 = 5%)
-        address venueVerifier; // address allowed to check-in
+        uint16 royaltyBps;
+        address venueVerifier;
     }
 
-    // resale rules
     struct ResaleRules {
         bool resaleEnabled;
         uint256 maxResalePrice;
         uint16 royaltyBps;
     }
 
-    // eventId => EventData
     mapping(uint256 => EventData) public eventsById;
-
-    // eventId => ResaleRules
     mapping(uint256 => ResaleRules) public resaleRulesByEvent;
-
-    // next event id
     uint256 public nextEventId = 1;
 
-    // Ticket flags
-    // tokenId => eventId
     mapping(uint256 => uint256) public ticketEventId;
-
-    // tokenId => used?
     mapping(uint256 => bool) public ticketUsed;
 
-    // Resale listing
     struct Listing {
         uint256 listingId;
         uint256 tokenId;
         address seller;
-        uint256 price; // wei
+        uint256 price;
         bool active;
     }
 
-    // listingId => Listing
     mapping(uint256 => Listing) public listingsById;
-
-    // primary pool
     mapping(uint256 => uint256[]) private primaryPool;
+    mapping(uint256 => uint256) public activeListingIdByToken;
 
-    // next listing id
     uint256 public nextListingId = 1;
-
-    // next token id
     uint256 public nextTokenId = 1;
 
-    // create event
     function createEvent(
         string calldata name,
         string calldata venue,
@@ -186,7 +162,6 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
         );
     }
 
-    // mint tickets
     function mintTickets(uint256 eventId, uint256 quantity) external returns (uint256 firstTokenId, uint256 lastTokenId) {
         if (quantity == 0) revert InvalidMaxSupply();
 
@@ -217,7 +192,6 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
         emit TicketsMinted(eventId, quantity, firstTokenId, lastTokenId);
     }
 
-    // set resale rules
     function setResaleRules(
         uint256 eventId,
         bool resaleEnabled,
@@ -246,7 +220,6 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
         emit ResaleRulesUpdated(eventId, resaleEnabled, maxResalePrice, royaltyBps);
     }
 
-    // buy primary ticket
     function buyPrimary(uint256 eventId) external payable nonReentrant returns (uint256 tokenId) {
         EventData storage e = eventsById[eventId];
         if (e.organizer == address(0)) revert EventNotFound();
@@ -259,17 +232,14 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
         tokenId = primaryPool[eventId][poolSize - 1];
         primaryPool[eventId].pop();
 
-        // transfer nft to buyer
         ticketNFT.safeTransferFrom(address(this), msg.sender, tokenId);
 
-        // pay organizer
         (bool ok, ) = e.organizer.call{value: msg.value}("");
         if (!ok) revert TransferFailed();
 
         emit TicketPurchased(eventId, tokenId, msg.sender, msg.value);
     }
 
-    // resale listing
     function listForResale(uint256 tokenId, uint256 price) external returns (uint256 listingId) {
         uint256 eventId = ticketEventId[tokenId];
         if (eventId == 0) revert EventNotFound();
@@ -281,13 +251,16 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
         if (price == 0) revert InvalidPrice();
         if (r.maxResalePrice != 0 && price > r.maxResalePrice) revert PriceTooHigh();
 
-        // must own ticket
         if (ticketNFT.ownerOf(tokenId) != msg.sender) revert NotTicketOwner();
 
-        // must approve platform to transfer nft
-        if (ticketNFT.getApproved(tokenId) != address(this) && !ticketNFT.isApprovedForAll(msg.sender, address(this))) {
+        if (
+            ticketNFT.getApproved(tokenId) != address(this) &&
+            !ticketNFT.isApprovedForAll(msg.sender, address(this))
+        ) {
             revert NotApproved();
         }
+
+        if (activeListingIdByToken[tokenId] != 0) revert AlreadyListed();
 
         listingId = nextListingId;
         nextListingId += 1;
@@ -300,10 +273,11 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
             active: true
         });
 
+        activeListingIdByToken[tokenId] = listingId;
+
         emit ListedForResale(listingId, tokenId, msg.sender, price);
     }
 
-    // buy resale ticket
     function buyResale(uint256 listingId) external payable nonReentrant returns (uint256 tokenId) {
         Listing storage l = listingsById[listingId];
         if (l.seller == address(0)) revert ListingNotFound();
@@ -322,21 +296,17 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
 
         if (msg.value != l.price) revert InvalidPayment();
 
-        // deactivate listing first
         l.active = false;
+        activeListingIdByToken[tokenId] = 0;
 
-        // calculate royalty
         uint256 royalty = (msg.value * uint256(r.royaltyBps)) / 10_000;
         uint256 sellerAmount = msg.value - royalty;
 
-        // transfer nft from seller to buyer
         ticketNFT.safeTransferFrom(l.seller, msg.sender, tokenId);
 
-        // pay seller
         (bool okSeller, ) = l.seller.call{value: sellerAmount}("");
         if (!okSeller) revert TransferFailed();
 
-        // pay organizer royalty
         if (royalty > 0) {
             (bool okOrg, ) = e.organizer.call{value: royalty}("");
             if (!okOrg) revert TransferFailed();
@@ -349,12 +319,10 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
         uint256 eventId = ticketEventId[tokenId];
         if (eventId == 0) return false;
         if (ticketUsed[tokenId]) return false;
-        if (ticketNFT.ownerOf(tokenId
-        ) != wallet) return false;
+        if (ticketNFT.ownerOf(tokenId) != wallet) return false;
         return true;
     }
 
-    // check in ticket
     function checkIn(uint256 tokenId, address attendee) external {
         uint256 eventId = ticketEventId[tokenId];
         if (eventId == 0) revert EventNotFound();
@@ -364,7 +332,6 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
 
         if (ticketUsed[tokenId]) revert TicketAlreadyUsed();
 
-        // user must own the NFT
         if (ticketNFT.ownerOf(tokenId) != attendee) revert NotTicketOwner();
 
         ticketUsed[tokenId] = true;
@@ -373,11 +340,44 @@ contract TicketingPlatform is ReentrancyGuard, ERC721Holder {
     }
 
     function getPrimaryPoolTokenIds(uint256 eventId) external view returns (uint256[] memory) {
-    return primaryPool[eventId];
-}
+        return primaryPool[eventId];
+    }
 
-    // sanity check function
+    function getTokenMetadataData(uint256 tokenId)
+        external
+        view
+        returns (
+            uint256 eventId,
+            string memory eventName,
+            string memory venue,
+            uint256 dateTime,
+            bool used,
+            bool listed,
+            bool exists
+        )
+    {
+        eventId = ticketEventId[tokenId];
+        if (eventId == 0) {
+            return (0, "", "", 0, false, false, false);
+        }
+
+        EventData storage e = eventsById[eventId];
+
+        uint256 activeListingId = activeListingIdByToken[tokenId];
+        listed = activeListingId != 0 && listingsById[activeListingId].active;
+
+        return (
+            eventId,
+            e.name,
+            e.venue,
+            e.dateTime,
+            ticketUsed[tokenId],
+            listed,
+            true
+        );
+    }
+
     function version() external pure returns (string memory) {
-        return "TicketingPlatform v0.1 (data structures)";
+        return "TicketingPlatform v0.3 (on-chain metadata + listing status)";
     }
 }

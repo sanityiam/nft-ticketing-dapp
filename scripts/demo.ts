@@ -21,7 +21,7 @@ function printDeploymentInfo(networkName: string) {
   const deploymentPath = path.join(process.cwd(), "deployments", `${networkName}.json`);
 
   if (!fs.existsSync(deploymentPath)) {
-    console.log("Deployment file not found yet (will be created during deploy).");
+    console.log("Deployment file not found yet - it will be created after the deployment");
     return;
   }
 

@@ -29,3 +29,13 @@ export async function getContracts() {
     addresses,
   };
 }
+
+export async function readOnChainMetadata(tokenUri: string) {
+  if (!tokenUri.startsWith("data:application/json;base64,")) {
+    throw new Error("Unsupported tokenURI format");
+  }
+
+  const base64 = tokenUri.replace("data:application/json;base64,", "");
+  const jsonString = atob(base64);
+  return JSON.parse(jsonString);
+}
